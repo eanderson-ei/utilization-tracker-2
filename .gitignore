@@ -1,0 +1,7 @@
+secrets/*
+!secrets/.keep
+__pycache__
+.vscode/
+*.pyc
+data/*
+!data/.keep
