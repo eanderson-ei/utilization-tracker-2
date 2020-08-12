@@ -75,8 +75,8 @@ select_org = dcc.Dropdown(
 
 select_name = dcc.Dropdown(
     id='select-name',
-    placeholder='Select one or more names',
-    multi=True
+    placeholder='Begin typing to find your name',
+    multi=False
 )
 
 ### UTILIZATION CHART ###
@@ -96,6 +96,50 @@ util_card = dbc.Card(
 util_card = dcc.Graph(id='utilization-chart',
                           config={'displayModeBar': False}
                           )
+
+### INSTRUCTIONS ###
+instruction_text = dcc.Markdown(
+    """
+    Utilization is an important measure of the amount of time we spend 
+    towards billable projects. Hitting your utilization target helps 
+    ensure our company is sustainable.
+    
+    Utilization is calculated as the number of billable hours divided 
+    by the workable hours in the month, regardless of your status as 
+    full-time or part-time or the total number of hours you worked.
+    
+    **Use the slider below to input your expected utilization for the 
+    remaining months in this strategic year. Or, return the slider to 'Off' 
+    (0%) to use this month's utilization to date to predict utilization.**
+    """
+)
+
+instruction_text = [
+    'Utilization measures how much time we spend '
+    'towards billable projects. Hitting your utilization target helps '
+    'ensure our company is sustainable.',
+    html.Br(),html.Br(),
+    'Utilization is calculated as the number of billable hours divided '
+    'by the workable hours in the month, regardless of your status as '
+    'full-time or part-time or the total number of hours you worked.',
+    html.Br(),html.Br(),
+    html.B('Use the slider below to input your expected utilization for the '
+    "remaining months in this strategic year. Or, return the slider to 'OFF' "
+    "(0%) to use this month's utilization-to-date to predict utilization."),
+    html.Br(),html.Br()
+    ]
+     
+
+
+instructions = dbc.Card(
+    [
+        dbc.CardBody(
+            [
+                html.P(instruction_text)
+            ]
+        )
+    ]
+)
 
 ### WEEKLY BAN ###
 week_card = dbc.Card(
@@ -121,8 +165,6 @@ month_card = dbc.Card(
     ], className='w-100'
 )
 
-### ENTRY TABLE ###
-
 ### SLIDER ###
 util_slider = daq.Slider(
     id='util-slider',
@@ -137,6 +179,13 @@ util_slider = daq.Slider(
     marks={'0': 'OFF'}
 )  
 
+### TABLE ###
+entry_table = dbc.Container(
+    dbc.Row(
+        dbc.Col(id='entry-table', width=12)
+    )
+)
+
 ### DROP DOWN ROW ###
 drop_downs = dbc.Container(
     [
@@ -146,6 +195,13 @@ drop_downs = dbc.Container(
         )
     ]
 )
+
+drop_downs = dbc.Container(
+    select_name
+)
+
+
+
 
 ### TOP ROW ###
 utilization_display = dbc.Container(
@@ -178,14 +234,33 @@ utilization_display = dbc.Row(
             ], justify='center', align='center'
         )
 
+utilization_display = dbc.Row(
+            [
+                dbc.Col(util_card, md=7, sm=10),
+                dbc.Col(util_slider, md=1, sm=2),
+                dbc.Col(
+                    [
+                        dbc.Row(dbc.Col(instructions))
+                    ], md=3, sm=10
+                )
+            ], justify='center', align='center'
+        )
+
+utilization_display = dbc.Row(
+            [
+                dbc.Col(util_card, md=10, sm=10),
+                dbc.Col(util_slider, md=2, sm=2)
+            ], justify='center', align='center'
+        )
 
 # Main Layout
 layout_main = html.Div([
     navbar,
+    dbc.Container(instruction_text),
     drop_downs,
+    dbc.Container(utilization_display),
     html.Br(),
-    utilization_display,
-    html.Br(),
+    entry_table,
     hours_report,
     fire_me,
     names_store

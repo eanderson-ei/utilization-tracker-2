@@ -3,77 +3,22 @@
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
+from components import functions 
 
-sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-                'Jan', 'Feb', 'Mar']
-year_helper = [0] * 9 + [1] * 3
-#TODO: calculate this rather than hard-code
-meh = [176, 168, 176, 184, 168, 176, 176, 168, 184,
-       168, 160, 184]
 
 text_grey = '#5F5F5F'
 light_grey = 'lightgrey'
 green = 'green'
 
-def plot_utilization(df, names, predict_input):
-    # create date time column for easier sorting
-    df['DT'] = pd.to_datetime(df['Entry Year'].astype(str)
-                         + df['Entry Month'], 
-                         format='%Y%b')
+
+def plot_utilization(df, name, predict_input, entries):
     # subset df by user
-    idf = df[df['User Name'].isin(names)].copy()
+    idf = df[df['User Name'] == name].copy()
     
-    # average across users
-    if len(names)>1:
-        idf = idf.groupby(['DT', 'Entry Year', 'Entry Month']).mean()
-        idf.reset_index(inplace=True)
+    print (name)
     
-    # calculated predicted values
-    filt = idf['DT'] == idf['DT'].max()
-    predicted_utilization = idf.loc[filt, 'Util to Date'].values[0]
-    predicted_fte = idf.loc[filt, 'FTE to Date'].values[0]
-    
-    # update with predicted input
-    # TODO: add button to clear value of predict_input
-    if predict_input and predict_input > 0:
-        predicted_utilization = predict_input/100
-    
-    # create prediction space
-    filt = idf['Entry Year'] == idf['Entry Year'].max()  # Necessary?
-    max_DT = idf.loc[filt, 'DT'].max()
-    max_month_index = sem_months.index(max_DT.strftime('%b')) + 1
-    prediction_months = sem_months[max_month_index:] 
-    prediction_years = [helper + idf['Entry Year'].max() 
-                        for helper in year_helper[max_month_index:]]
-    pdf = pd.DataFrame({'Entry Year': prediction_years, 
-                        'Entry Month': prediction_months})
-    pdf['DT'] = pd.to_datetime(pdf['Entry Year'].astype(str)
-                               + pdf['Entry Month'], 
-                               format='%Y%b')
-    pdf['MEH'] = meh[max_month_index:]
-    
-    
-    # add predicted values 
-    pdf['Predicted Billable'] = pdf['MEH'] * predicted_utilization
-    pdf['Predicted Total'] = pdf['MEH'] * predicted_fte
-    
-    # append to idf
-    idf = idf.append(pdf, ignore_index=True)
-    idf.fillna(0, inplace=True)
-    
-    # calculate averages
-    #TODO: add Strategy Year column and loop through (breaks for older employees)
-    filt = idf['DT'] >= pd.to_datetime(pd.to_datetime('2020' + 'Apr', 
-                                                      format='%Y%b'))
-    idf.loc[filt, 'Predicted Billable'] = idf.loc[filt, 'Predicted Billable'] + idf.loc[filt, 'Billable']
-    idf.loc[filt, 'Predicted Total'] = idf.loc[filt, 'Predicted Total'] + idf.loc[filt, 'Total']
-    idf.loc[filt, 'Avg Utilization'] = (idf.loc[filt, 'Predicted Billable'].cumsum()
-                                  / idf.loc[filt, 'MEH'].cumsum())
-    idf.loc[filt, 'Avg FTE'] = (idf.loc[filt, 'Predicted Total'].cumsum()
-                                  / idf.loc[filt, 'MEH'].cumsum())
-                                  
-    print(idf)
-    
+    idf, max_DT = functions.predict_utilization(idf, predict_input)
+        
     # create figure
     fig = go.Figure()
     
@@ -110,7 +55,8 @@ def plot_utilization(df, names, predict_input):
         text=idf['Util to Date'],
         textposition='top right',
         texttemplate='%{y:%f}',
-        hoverinfo='skip'
+        hoverinfo='skip',
+        cliponaxis=False
     ))
     
     # add trace for MEH
@@ -123,7 +69,8 @@ def plot_utilization(df, names, predict_input):
         text=idf['Util to Date'],
         textposition='top right',
         texttemplate='%{y:%f}',
-        hoverinfo='skip'
+        hoverinfo='skip',
+        cliponaxis=False
     ))
     
     # add 'x' for this month's actuals
@@ -150,14 +97,18 @@ def plot_utilization(df, names, predict_input):
         line_color='darkgrey'
     ))
     
+    # add projects from entries table
+    
     # Update layout
     fig.update_layout(plot_bgcolor='white',
                       xaxis_showgrid=False,
-                      yaxis_showgrid=False)
+                      yaxis_showgrid=False,
+                      )
     
     # Update yaxes
     fig.update_yaxes(rangemode='tozero',
-                     tickformat='%')
+                     tickformat='%',
+                     range=[0,1.39])
     
     # Update xaxes
     fig.update_xaxes(range=[(pd.to_datetime('2020' + 'Mar' + '26', format='%Y%b%d')),
@@ -172,17 +123,19 @@ def plot_utilization(df, names, predict_input):
                       
     # Add predicted utilization annotation
     filt = idf['DT'] == pd.to_datetime('2021' + 'Mar', format='%Y%b')
-    predict_display = idf.loc[filt, 'Avg Utilization'].values[0]
-    predict_text = f'Predicted<br>Utilization ({predict_display*100:.0f}%)'
-    fig.add_annotation(x=pd.to_datetime('2021' + 'Mar', format='%Y%b'),
-                       y=predict_display,
-                       text=predict_text,
-                       xanchor='left',
-                       yanchor='middle',
-                       xshift=10,
-                       showarrow=False,
-                       align='left'
-    )
+    predicted = idf.loc[filt, 'Avg Utilization']
+    if not predicted.empty:
+        predict_display = predicted.values[0]
+        predict_text = f'Predicted<br>Utilization ({predict_display*100:.0f}%)'
+        fig.add_annotation(x=pd.to_datetime('2021' + 'Mar', format='%Y%b'),
+                        y=predict_display,
+                        text=predict_text,
+                        xanchor='left',
+                        yanchor='middle',
+                        xshift=10,
+                        showarrow=False,
+                        align='left'
+        )
     
     # Update font
     fig.update_layout(font=dict(family='Gill Sans MT, Arial', 
@@ -193,6 +146,9 @@ def plot_utilization(df, names, predict_input):
     
     return fig
 
+
+def plot_projects():
+    pass
 
 if __name__=='__main__':
     import pygsheets

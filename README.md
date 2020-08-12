@@ -13,14 +13,15 @@ Conda environment: utilization-report-2
 - [x] Add prediction function
 - [x] Plot prediction
 - [x] Populate prediction annotation
-- [ ] Add Instructions
+- [x] Add Instructions
 - [x] Add 'X' for this month's actual utilization/hours
-- [ ] Add Strategy Year and loop through to calculate average utilization
+- [x] Add Strategy Year 
+- [ ] loop through Strategy Year to calculate average utilization (check for lag)
 - [ ] Create username and password list
 - [ ] Read in name associated with username for initial load
-- [ ] Add Entries Table
+- [x] Add Entries Table
 - [ ] Ask JS if we want to weight FTE for employee type (standard or part time)
-- [ ] Add org to drop down and link to names
+- [ ] Design Projects view
 - [ ] Add weekly summary
 - [ ] Build team view
 
@@ -32,7 +33,6 @@ Conda environment: utilization-report-2
 - [ ] Fill in missing data for Org Name or otherwise assign staff to Practice Area
 - [ ] Add 'Preferred Name' for employees (e.g., Geeta)
 - [x] Add column to allow assigning project to PA and splitting revenue between Practice Areas (Projects have one or  many Practice Areas--managed through additional timecodes)
-- [ ] How are standard  
 
 **To maintain**:
 
@@ -189,56 +189,3 @@ Another newer option is the cached callback in dash_extensions. This creates a s
 
 
 To test as you go, run the script from the command line.
-
-
-
-# EI-DEV
-
-First, set up a Project and Service Account on Google. See [here](https://pygsheets.readthedocs.io/en/stable/authorization.html) (option 2). Save the JSON file to your `secrets/` folder. You will copy it into an environment variable when deploying to Heroku.
-
-## pygsheets
-
-```python
-import pygsheets
-import pandas as pd
-
-def auth_gspread():
-    """Authorize Google to access the Project"""
-    #creds for local development
-    try:
-        client = pygsheets.authorize(
-            service_file='secrets/gs_credentials.json'
-            )
-    # creds for heroku deployment
-    except:
-        client = pygsheets.authorize(
-            service_account_env_var='GOOGLE_SHEETS_CREDS_JSON'
-        )
-    
-    return client
-
-def load_data(client, tidy=True):
-    """Loads data from the first sheet in a Sheet
-    """
-    # open spreadsheet
-    wks = client.open('<WORKBOOK NAME>').sheet1  # change sheet
-    
-    # use get_all_records with tidy data, returns dict with 
-    # header row as keys
-    if tidy:
-    	df = wks.get_as_df(empty_values=None)
-    	df.dropna(axis=1, how='all', inplace=True)
-        
-    # use get_all_values with less structured data, returns
-    # list of rows as list
-    else:
-        data_list = wks.get_all_values()
-        headers=data.pop(0)
-    	df = pd.DataFrame(data, columns=headers)
-        filt = df[headers[0]!='']
-        df = df.loc[filt, :].copy()
-    
-    return df
-```
-
-https://medium.com/game-of-data/play-with-google-spreadsheets-with-python-301dd4ee36eb
