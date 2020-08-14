@@ -22,16 +22,21 @@ hours_report, hours_entries = functions.import_hours()
     [State('names_store', 'children')]
 )
 def populate_names(_, stored_names):
+    usernames = {
+        'eanderson@enviroincentives.com': 'Anderson, Erik',
+        'kboysen@enviroincentives.com': 'Boysen, Kristen',
+        'kriley@enviroincentives.com': 'Riley, Kathryn',
+        'cpraul@enviroincentives.com': 'Praul, Chad'
+    }
     # get list of unique names
     names = hours_report['User Name'].unique()
     names.sort()
     options = [{'label': name, 'value': name} for name in names]
     # get names
     user = request.authorization['username']
-    user = 'Anderson, Erik'
-    users = user
+    user = usernames.get(user, None)
     
-    return options, users
+    return options, user
 
 ### UPDATE UTILIZATION CHART ###
 @app.callback(
