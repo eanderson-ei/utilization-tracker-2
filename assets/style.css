@@ -2,6 +2,10 @@
     margin: 0;
 }
 
+div.plotly-notifier {
+    visibility: hidden;
+  }
+  
 /* table{
     table-layout: fixed;
 } */

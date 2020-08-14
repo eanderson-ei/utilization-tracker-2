@@ -3,6 +3,7 @@
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
+import webcolors
 from components import functions 
 
 
@@ -11,9 +12,11 @@ light_grey = 'lightgrey'
 green = 'green'
 
 
-def plot_utilization(df, name, predict_input, entries):
-    # subset df by user
+def plot_utilization(df, name, predict_input, entries,  # add month_class for project breakdown
+                     breakdown=True):
+    # subset df and entries by user
     idf = df[df['User Name'] == name].copy()
+    # edf = month_class[month_class['User Name'] == name].copy()  # used for project breakdown
     
     print (name)
     
@@ -25,6 +28,99 @@ def plot_utilization(df, name, predict_input, entries):
     # actual filt
     filt = idf['DT'] <= max_DT
     
+    if breakdown:
+        # map colors with opacity
+        # TODO: consider moving to functions, get_classification
+        # def map_colors(df):
+        #     colors = {'Billable': '#229954', 
+        #             'R&D': '#F27C22', 
+        #             'G&A': '#909497', 
+        #             'Marketing & NBD': '#2E9DCD', 
+        #             'Overhead': '#1F73AE',
+        #             'Time Off': '#F1C40F'}
+        #     df['color'] = df['Classification'].map(colors)
+            # df['rgb'] = df['color'].map(webcolors.hex_to_rgb)
+            # count_entries = df.groupby('Classification')['Project'].nunique()
+            # df = df.merge(count_entries, left_on='Classification', right_index=True,
+            #               suffixes=(None, '_count'))
+            # df_list = []
+            # for classifier in df['Classification'].unique():
+            #     filt = df['Classification'] == classifier
+            #     n_unique_projects = df.loc[filt, 'Project_count'].max()
+            #     opacities = np.linspace(.8, .2, n_unique_projects)
+            #     projects = df.loc[filt, 'Project'].unique()
+            #     dff = pd.DataFrame({'Project': projects, 'opacity': opacities})
+            #     df_list.append(dff)
+            # odf = pd.concat(df_list)
+            # df = df.merge(odf, on='Project')            
+            
+            
+            # color_table = df['rgb'].apply(pd.Series)
+            # color_table[3] = df['opacity']
+            # color_table[4] = list(zip(color_table[0], 
+            #                           color_table[1],
+            #                           color_table[2],
+            #                           color_table[3]))
+            # color_table[5] = 'rbga' + color_table[4].astype(str)
+            # df['fcolor'] = color_table[5]
+            # df['fcolor'] = df['fcolor'].apply(lambda x: "".join(x.split())).astype(str)
+            
+            # return df
+        
+        # # show breakdown by class
+        # filt1 = edf['DT'] <= max_DT
+        # edf_filt = edf.loc[filt1, :].copy()
+        # edf_filt = map_colors(edf_filt)
+        # for classifier in ['Billable', 'R&D', 'G&A', 'Marketing & NBD', 
+        #                    'Overhead', 'Time Off']:
+        #     filt1 = edf_filt['Classification'] == classifier
+        #     edf_filt_class = edf_filt.loc[filt1, :]
+        #     if not edf_filt_class.empty:
+        #         # get color
+        #         color = edf_filt_class.loc[filt1, 'color'].unique()[0]
+        #         fig.add_trace(go.Scatter(
+        #             y=edf_filt_class.loc[filt1, 'FTE'],
+        #             x=edf_filt_class.loc[filt1, 'DT'],
+        #             name=classifier,
+        #             mode='lines',
+        #             line=dict(width=0, color=color),
+        #             # fillcolor=color,
+        #             fill='tonexty',
+        #             stackgroup='classes',
+        #             hoveron='fills', # fills not working
+        #             hoverinfo='text+y',
+        #             text=classifier,
+        #             showlegend=True
+        #             ))
+        
+        # show breakdown by class
+        colors = {'Billable': '#229954', 
+                    'R&D': '#F27C22', 
+                    'G&A': '#909497', 
+                    'Marketing & NBD': '#2E9DCD', 
+                    'Overhead': '#1F73AE',
+                    'Time Off': '#F1C40F'}
+        
+        for classifier in ['Billable', 'R&D', 'G&A', 'Marketing & NBD', 
+                           'Overhead', 'Time Off']:
+            # get color
+            color = colors.get(classifier, '#000000')
+            fig.add_trace(go.Scatter(
+                y=idf.loc[filt, classifier]/idf.loc[filt, 'MEH'],
+                x=idf.loc[filt, 'DT'],
+                name=classifier,
+                mode='lines',
+                line=dict(width=0, color=color),
+                # fillcolor=color,
+                fill='tonexty',
+                stackgroup='classes',
+                hoveron='points', # fills not working
+                hoverinfo='text+y',
+                text=classifier,
+                showlegend=True
+                ))
+    
+    
     # add trace for average, show predicted on hover
     fig.add_trace(go.Scatter(
         y=idf['Avg Utilization'],
@@ -32,7 +128,8 @@ def plot_utilization(df, name, predict_input, entries):
         name='Average Utilization',
         line=dict(color=green, shape='spline'),
         mode='lines',
-        hovertemplate='%{y:%f}'
+        hovertemplate='%{y:%f}',
+        showlegend=False
     ))
     
     # add trace for predicted meh
@@ -42,7 +139,8 @@ def plot_utilization(df, name, predict_input, entries):
         name='Average FTE',
         line=dict(color=light_grey, shape='spline'),
         mode='lines',
-        hovertemplate='%{y:%f}'
+        hovertemplate='%{y:%f}',
+        showlegend=False
     ))
     
     # add trace for actual
@@ -56,7 +154,8 @@ def plot_utilization(df, name, predict_input, entries):
         textposition='top right',
         texttemplate='%{y:%f}',
         hoverinfo='skip',
-        cliponaxis=False
+        cliponaxis=False,
+        showlegend=False
     ))
     
     # add trace for MEH
@@ -70,7 +169,8 @@ def plot_utilization(df, name, predict_input, entries):
         textposition='top right',
         texttemplate='%{y:%f}',
         hoverinfo='skip',
-        cliponaxis=False
+        cliponaxis=False,
+        showlegend=False
     ))
     
     # add 'x' for this month's actuals
@@ -83,7 +183,8 @@ def plot_utilization(df, name, predict_input, entries):
         marker=dict(symbol='x-thin', 
                     line=dict(color=green, width=1)),
         hovertemplate='%{y:%f}',
-        line_color=green
+        line_color=green,
+        showlegend=False
     ))
     
     fig.add_trace(go.Scatter(
@@ -94,32 +195,70 @@ def plot_utilization(df, name, predict_input, entries):
         marker=dict(symbol='x-thin', 
                     line=dict(color='darkgrey', width=1)),
         hovertemplate='%{y:%f}',
-        line_color='darkgrey'
+        line_color='darkgrey',
+        showlegend=False
     ))
     
     # add projects from entries table
+    # TODO: Delete or fix
+    
+    # filt = edf['DT'] <= max_DT
+    # edf_filt = edf.loc[filt, :].copy()
+    # edf_filt = map_colors(edf_filt)
+    # for classifier in ['Billable', 'R&D', 'G&A', 'Marketing & NBD', 'Overhead', 'Time Off']:
+    #     filt = edf_filt['Classification'] == classifier
+    #     edf_filt_class = edf_filt.loc[filt, :]
+    #     for idx, project in enumerate(edf_filt_class['Project'].unique()):
+    #         filt = edf_filt_class['Project'] == project
+    #         # get color
+    #         color = edf_filt_class.loc[filt, 'color'].unique()[0]
+    #         fig.add_trace(go.Scatter(
+    #             y=edf_filt_class.loc[filt, 'FTE'],
+    #             x=edf_filt_class.loc[filt, 'DT'],
+    #             legendgroup=classifier,
+    #             name=classifier,
+    #             mode='lines',
+    #             line=dict(width=0, color=color),
+    #             # fillcolor=color,
+    #             fill='tonexty',
+    #             stackgroup='projects',
+    #             hoveron='points+fills', # fills not working
+    #             hoverinfo='text+x+y',
+    #             text=project,
+    #             showlegend=[True if idx == 0 else False][0]
+    #             ))
+    
+    
+    
+    
     
     # Update layout
     fig.update_layout(plot_bgcolor='white',
                       xaxis_showgrid=False,
                       yaxis_showgrid=False,
+                      autosize=False,
+                      height=500,
                       )
     
     # Update yaxes
     fig.update_yaxes(rangemode='tozero',
                      tickformat='%',
-                     range=[0,1.39])
+                     range=[0,1.39],
+                     fixedrange=True)
     
     # Update xaxes
     fig.update_xaxes(range=[(pd.to_datetime('2020' + 'Mar' + '26', format='%Y%b%d')),
                             pd.to_datetime('2021' + 'Mar', format='%Y%b')],
                      nticks=12,
                      tickformat='%b<br>%Y',
-                     linecolor=light_grey
+                     linecolor=light_grey,
+                    #  fixedrange=True
     )
     
+    
+    
     # Add space for Predicted Annotation
-    fig.update_layout(margin=dict(r=150,pad=4))
+    fig.update_layout(margin=dict(l=10, r=150, t=20, pad=4))
                       
     # Add predicted utilization annotation
     filt = idf['DT'] == pd.to_datetime('2021' + 'Mar', format='%Y%b')
@@ -141,8 +280,22 @@ def plot_utilization(df, name, predict_input, entries):
     fig.update_layout(font=dict(family='Gill Sans MT, Arial', 
                                 size=14, color=text_grey))
     
-    # Remove legend
-    fig.update_layout(showlegend=False)
+    if breakdown:
+        # update legend and increase graph height and margins to accomodate with slider
+        fig.update_layout(
+            legend=dict(
+                orientation="h",
+                yanchor='bottom',
+                y=-0.4,
+                xanchor='center',
+                x=.5
+                ),
+            height=600,
+            margin=dict(t=50)
+        )
+    
+    # # Remove legend
+    # fig.update_layout(showlegend=True)
     
     return fig
 
@@ -186,7 +339,7 @@ if __name__=='__main__':
     
     client = auth_gspread()
     df = load_report(client, 'Utilization-Hours', 'Utilization-Hours-2')
-    plot_utilization(df, 'Anderson, Erik')
-    fig.show()
+    # plot_utilization(df, 'Anderson, Erik')
+    # fig.show()
     
     

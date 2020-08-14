@@ -94,7 +94,16 @@ util_card = dbc.Card(
 
 # overwrite card for initial deploy
 util_card = dcc.Graph(id='utilization-chart',
-                          config={'displayModeBar': False}
+                          config={'displayModeBar': 'hover',
+                                  'doubleClick': False,
+                                  'scrollZoom': True,
+                                  'modeBarButtonsToRemove': [
+                                       'zoom2d', 'select2d', 'lasso2d', 
+                                      'zoomIn2d', 'zoomOut2d', 'autoScale2d', 
+                                      'resetScale2d', 'hoverClosestCartesian',
+                                      'hoverCompareCartesian'
+                                      ],
+                                  'displaylogo': False}
                           )
 
 ### INSTRUCTIONS ###
@@ -169,11 +178,11 @@ month_card = dbc.Card(
 util_slider = daq.Slider(
     id='util-slider',
     min=0,
-    max=140,
+    max=120,
     vertical=True,
     handleLabel={"showCurrentValue": True,"label": "%"},
     labelPosition='top',
-    size=265*1.1,
+    size=265*1.3,
     updatemode='mouseup',  #'drag' for on-the-fly updates,
     color='green',
     marks={'0': 'OFF'}
@@ -248,8 +257,8 @@ utilization_display = dbc.Row(
 
 utilization_display = dbc.Row(
             [
-                dbc.Col(util_card, md=10, sm=10),
-                dbc.Col(util_slider, md=2, sm=2)
+                dbc.Col(util_card, md=11, sm=11),
+                dbc.Col(util_slider, md=1, sm=1)
             ], justify='center', align='center'
         )
 

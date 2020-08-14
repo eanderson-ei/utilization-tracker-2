@@ -53,10 +53,73 @@ def import_hours():
     df['DT'] = pd.to_datetime(df['DT'])
     
     # get entries
-    entries = load_report(client, 'Utilization-Hours', 'june-mar-2020')
+    entries1 = load_report(client, 'Utilization-Hours', 'june-mar-2020')    
+    entries2 = load_report(client, 'Utilization-Hours', 'apr-may-2020')
+    entries = pd.concat([entries1, entries2])
+    
+    # format dtypes
     entries['Hours Date'] = pd.to_datetime(entries['Hours Date'])
     
+    # create month and year convenience columns
+    #TODO: move to compile_working_hours
+    entries['Entry Month'] = pd.DatetimeIndex(entries['Hours Date']).strftime('%b')
+    entries['Entry Year'] = pd.DatetimeIndex(entries['Hours Date']).strftime('%Y')
+    
+    # create username column
+    # TODO: move this to compile_working_hours
+    # create user name column
+    entries['First Name'] = entries['First Name'].str.strip()  # remove whitespace before Replicon first names
+    entries['Last Name'] = entries['Last Name'].str.strip()
+    entries['User Name'] = entries[['Last Name', 'First Name']].apply(
+        lambda x: ', '.join(x), axis=1)
+    
+    entries.drop(['First Name', 'Last Name'], axis=1, inplace=True)
+    
+    # TODO: move this to compile working hours
+    # reclass unbillable to R&D
+    entries['Code'] = entries['User Defined Code 3']
+    filt = entries['Task Name'].str.contains('Unbillable')
+    entries.loc[filt, 'Code'] = 'IRD'
+
+    # reclass 'User Defined Code 3' to category
+    # TODO: move this to compile_working_hours
+    codes_df = load_report(client, 'Utilization-Inputs', 'CODES')
+    codes = dict(zip(codes_df['User Defined Code 3'], codes_df['Code']))
+    entries['Classification'] = entries['Code'].replace(codes)
+    
+    # update 'Indirect' Projects to Classification
+    filt = entries['Project'] == 'Indirect'
+    entries.loc[filt, 'Project'] = entries.loc[filt, 'Classification']
+    
     return df, entries
+
+
+def get_month_entries(hours_entries):
+    df = hours_entries.groupby(['User Name', 'Classification', 'Project', 
+                                'Entry Year', 'Entry Month']).sum()
+    df.reset_index(inplace=True)
+    # add DT column
+    # TODO: add to hours entries and group with this
+    df['DT'] = pd.to_datetime(df['Entry Year'].astype(str)
+                               + df['Entry Month'], 
+                               format='%Y%b')
+    
+    meh_df = pd.DataFrame({'Entry Month': sem_months,
+                           'Entry Year': [2020 + helper for helper in year_helper],
+                           'MEH': meh})
+    meh_df['Entry Year'] = meh_df['Entry Year'].astype(str)
+    
+    df = df.merge(meh_df, on=['Entry Year', 'Entry Month'], how='inner')
+    df['FTE'] = df['Entered Hours'] / df['MEH']
+    
+    return df
+
+
+def get_classification(month_entries):
+    df = month_entries.groupby(['User Name', 'Classification', 'DT']).sum()
+    df.reset_index(inplace=True)
+    
+    return df
 
 
 def predict_utilization(idf, predict_input):

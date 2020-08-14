@@ -11,6 +11,8 @@ from app import app
 
 # Load data 
 hours_report, hours_entries = functions.import_hours()
+# month_entries = functions.get_month_entries(hours_entries)
+# month_class = functions.get_classification(month_entries)  # used for project breakdown
 
 ### UPDATE NAMES ###
 @app.callback(
@@ -42,7 +44,7 @@ def update_utilization_chart(name, predict_input):
         fig = visualizations.plot_utilization(hours_report, 
                                               name,
                                               predict_input,
-                                              hours_entries)
+                                              hours_entries)  # add month_class for project breakdown
     else:
         raise PreventUpdate
     
@@ -56,13 +58,13 @@ def update_utilization_chart(name, predict_input):
 )
 def update_entry_table(name):
     if name:
-        filt = ((hours_entries['Last Name'] == name.split(', ')[0]) &
-                (hours_entries['First Name'] == name.split(', ')[1]))
-        columns = ['Project', 'Task Name', 'Hours Date', 
+        filt = ((hours_entries['User Name'] == name) 
+                & (hours_entries['Hours Date'] >= '2020-06-01'))
+        columns = ['Classification', 'Project', 'Task Name', 'Hours Date', 
                    'Entered Hours', 'Comments']
         df = hours_entries.loc[filt, columns]
         df.sort_values('Hours Date', ascending=False, inplace=True)
-        df['Hours Date'] = df['Hours Date'].dt.strftime('%b %d, %Y')
+        df['Hours Date'] = df['Hours Date'].dt.date
         
         table = dash_table.DataTable(
             columns = [{"name": i, "id": i} for i in df.columns],

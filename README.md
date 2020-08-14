@@ -24,6 +24,7 @@ Conda environment: utilization-report-2
 - [ ] Design Projects view
 - [ ] Add weekly summary
 - [ ] Build team view
+- [ ] Add reset graph button (https://plotly.com/python/custom-buttons/ relayout)
 
 ##### Deltek Changes to Request
 
