@@ -16,24 +16,24 @@ hours_report, hours_entries = functions.import_hours()
 # month_entries = functions.get_month_entries(hours_entries)
 # month_class = functions.get_classification(month_entries)  # used for project breakdown
 
-### UPDATE NAMES ###
-@app.callback(
-    [Output('select-name', 'options'),
-     Output('select-name', 'value')],
-    [Input('fire', 'children')]
-)
-def populate_names(_):
-    with open('components/usernames.json') as f:
-        usernames = json.load(f)
-    # get list of unique names
-    names = hours_report['User Name'].unique()
-    names.sort()
-    options = [{'label': name, 'value': name} for name in names]
-    # get names
-    user = request.authorization['username']
-    user = usernames.get(user, None)
+# ### UPDATE NAMES ###
+# @app.callback(
+#     [Output('select-name', 'options'),
+#      Output('select-name', 'value')],
+#     [Input('fire', 'children')]
+# )
+# def populate_names(_):
+#     with open('components/usernames.json') as f:
+#         usernames = json.load(f)
+#     # get list of unique names
+#     names = hours_report['User Name'].unique()
+#     names.sort()
+#     options = [{'label': name, 'value': name} for name in names]
+#     # get names
+#     user = request.authorization['username']
+#     user = usernames.get(user, None)
     
-    return options, user
+#     return options, user
 
 
 ### UPDATE UTILIZATION CHART ###

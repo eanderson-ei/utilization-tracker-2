@@ -315,14 +315,14 @@ def calc_utilization(idf, first_last, idv_emp_type, days_remaining):
         )
 
     # Calculate FTE
-    if idv_emp_type == 'Standard':
-        pass
-    elif '80' in idv_emp_type:
-        idf['MEH'] = idf['MEH'] * 0.80
-    elif '75' in idv_emp_type:
-        idf['MEH'] = idf['MEH'] * 0.75 
+    # TODO: Ask JS if we want to weight by employee type
+    # if idv_emp_type == 'Standard':
+    #     pass
+    # elif '80' in idv_emp_type:
+    #     idf['MEH'] = idf['MEH'] * 0.80
+    # elif '75' in idv_emp_type:
+    #     idf['MEH'] = idf['MEH'] * 0.75 
         
-    idf['MEH'] = idf['MEH']
     idf['FTE'] = idf['Total'] / idf['MEH']
     current_total = idf.loc[(last_year_worked, last_month_worked), 
                             'Total']
@@ -366,7 +366,9 @@ def update_employees(e_df):
         for key in pass_dict.keys():
             if not key in existing_emp:
                 print(f'UPDATE ENV VAR: {key} IS NEW!')
+        f.seek(0)
         json.dump(pass_dict, f, indent=4)
+        f.truncate()
     
     # return active employee names for processing
     return usernames['User Name'].values

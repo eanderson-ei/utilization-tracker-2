@@ -9,13 +9,16 @@ from components import functions
 
 from app import app
 
-### COMPONENTS ###
-### NAV BAR ###
-### FORM ###
-### DROPDOWN ###
-### UTILIZATION CHART ###
-### WEEKLY BAN ###
-### MONTHLY BURN RATE ###
+### USERNAMES ###
+with open('components/usernames.json') as f:
+        usernames = json.load(f)
+    # get list of unique names
+    names = usernames.values()
+    names.sort()
+    name_options = [{'label': name, 'value': name} for name in names]
+    # get login name
+    user = request.authorization['username']
+    user = usernames.get(user, None) 
 
 ### DIV STORES ###
 hours_report = html.Div(id='hours-report', style={'display': 'none'})
@@ -73,6 +76,8 @@ select_name = dcc.Dropdown(
     id='select-name',
     placeholder='Begin typing to find your name',
     persistence=True,
+    options = name_options,
+    value = user,
     multi=False
 )
 

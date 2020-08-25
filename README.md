@@ -12,12 +12,14 @@ Conda environment: utilization-report-2
 
 - [ ] Permanence name from My Utilization to My Projects
 - [ ] Add % to My Projects to see time spent relative to MEH
-- [ ] Get all emails added to Deltek
+- [ ] Check calculation of Utilization for employee type correction (wrong in stacked area (b/c using adjusted MEH) but right in )
+- [ ] Get all emails and staff added to Deltek
+- [ ] Add google tracking
+- [ ] Add date updated
 - [x] Add top-line instructions for My Projects
 - [ ] Instructions
   - [ ] Clarity around how utilization is calculated
   - [ ] Clarity around what goes into utilization
-
 - [x] Add prediction function
 - [x] Plot prediction
 - [x] Populate prediction annotation
@@ -48,9 +50,30 @@ Conda environment: utilization-report-2
 
 **To maintain**:
 
-Download Utilization and Projects Monday AM, run compile_hours_working.py.
+1. Download Utilization, Projects, and Employees reports from Cognos each Monday AM
 
-(If Projects not run, will warn if new projects not added)
+2. Activate conda environment `conda activate utilization-report-2`
+
+3. Run compile_hours_working.py.
+
+4. Check CLI for warnings
+
+   1. If a new employee was added, copy `passwords.json` into the Environment Variables Config at heroku for this app
+   2. If a project was billed against but is not in the projects table on Deltek, a CSV will be saved out to `data/` showing which entries were missed. Manually add this project to the code (where Chad's project was added)
+
+5. Restart the app (to load changes to the Google Sheet)
+
+   Run `heroku restart` from the root project folder
+
+5. Update [2020 Utilization Tool](https://enviroincentives.sharepoint.com/:x:/g/EbRNKr-tEV9LvtWtuY1IoMMBpsYHU_kI2C1p1jADsxhofA?e=BcvEhC) by copying form `data/hours_report` into 'hours_report' tab
+6. Refresh both graphs, , change 'Updated' text
+
+**Requirements**
+
+1. Deltek
+   1. New projects are added along with new tasks
+   2. New employees are added 
+   3. New employees are assigned email addresses
 
 **To deploy changes:**
 
