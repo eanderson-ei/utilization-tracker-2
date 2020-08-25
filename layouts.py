@@ -9,20 +9,25 @@ from components import functions
 
 from app import app
 
-### USERNAMES ###
-with open('components/usernames.json') as f:
-        usernames = json.load(f)
-    # get list of unique names
-    names = usernames.values()
-    names.sort()
-    name_options = [{'label': name, 'value': name} for name in names]
-    # get login name
-    user = request.authorization['username']
-    user = usernames.get(user, None) 
+### COMPONENTS ###
+### NAV BAR ###
+### FORM ###
+### DROPDOWN ###
+### UTILIZATION CHART ###
+### WEEKLY BAN ###
+### MONTHLY BURN RATE ###
 
 ### DIV STORES ###
 hours_report = html.Div(id='hours-report', style={'display': 'none'})
+
 fire_me = html.Div(id='fire', children=[], style={'display': 'none'})
+
+### VALID THRU
+valid_thru = dbc.Container(html.Div(id='valid-thru'),
+                           style={'fontFamily': 'Gill Sans MT, Arial',
+                                  'fontSize': 16,
+                                  'textAlign': 'left'})
+
 ### NAV BAR ###
 # Nav Bar
 LOGO = app.get_asset_url('ei-logo-white.png')
@@ -76,8 +81,6 @@ select_name = dcc.Dropdown(
     id='select-name',
     placeholder='Begin typing to find your name',
     persistence=True,
-    options = name_options,
-    value = user,
     multi=False
 )
 
@@ -204,8 +207,10 @@ drop_downs = dbc.Container(
     select_name
 )
 
-
-
+# Reset Chart
+reset_chart = dbc.Button("Reset", id='reset-axes',
+            color='secondary', 
+            outline=True, size='sm')
 
 ### TOP ROW ###
 utilization_display = dbc.Container(
@@ -262,9 +267,12 @@ layout_main = html.Div([
     navbar,
     dbc.Container(instruction_text),
     drop_downs,
+    html.Br(),
+    dbc.Container(reset_chart),
     dbc.Container(utilization_display),
     html.Br(),
-    hours_report,
+    valid_thru,
+    html.Br(),
     fire_me
 ])
 
@@ -339,6 +347,9 @@ projects_layout = html.Div([
     dcc.Loading(dbc.Container(projects_graph)),
     html.Br(),
     entry_table,
+    html.Br(), html.Br(),
+    valid_thru,
+    html.Br(),
     fire_me
 ])
 

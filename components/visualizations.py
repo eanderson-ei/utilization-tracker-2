@@ -295,6 +295,24 @@ def plot_utilization(df, name, predict_input, entries,  # add month_class for pr
             margin=dict(t=50)
         )
     
+ 
+    # # Add Relayout button
+    # fig.update_layout(
+    #     updatemenus=[
+    #         dict(
+    #             type="buttons",
+    #             buttons=[
+    #                 dict(label="Refresh",
+    #                      method='relayout',
+    #                      args=["xaxes", dict(
+    #                          range=[(pd.to_datetime('2020' + 'Mar' + '26', format='%Y%b%d')),
+    #                         pd.to_datetime('2021' + 'Mar', format='%Y%b')],
+    #                         nticks=12,
+    #                      )])
+    #             ]
+    #         )
+    #     ]
+    # )
     # # Remove legend
     # fig.update_layout(showlegend=True)
     

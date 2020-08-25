@@ -16,33 +16,50 @@ hours_report, hours_entries = functions.import_hours()
 # month_entries = functions.get_month_entries(hours_entries)
 # month_class = functions.get_classification(month_entries)  # used for project breakdown
 
-# ### UPDATE NAMES ###
-# @app.callback(
-#     [Output('select-name', 'options'),
-#      Output('select-name', 'value')],
-#     [Input('fire', 'children')]
-# )
-# def populate_names(_):
-#     with open('components/usernames.json') as f:
-#         usernames = json.load(f)
-#     # get list of unique names
-#     names = hours_report['User Name'].unique()
-#     names.sort()
-#     options = [{'label': name, 'value': name} for name in names]
-#     # get names
-#     user = request.authorization['username']
-#     user = usernames.get(user, None)
+### UPDATE NAMES ###
+@app.callback(
+    [Output('select-name', 'options'),
+     Output('select-name', 'value')],
+    [Input('fire', 'children')],
+     [State('initial-state', 'data')]
+)
+def populate_names(_, existing_name):
+    with open('components/usernames.json') as f:
+        usernames = json.load(f)
+    # get list of unique names
+    names = hours_report['User Name'].unique()
+    names.sort()
+    options = [{'label': name, 'value': name} for name in names]
+    # get names
+    user = request.authorization['username']
+    user = usernames.get(user, None)
     
-#     return options, user
+    if not existing_name:
+        user = request.authorization['username']
+        user = usernames.get(user, None)
+        
+    else:
+        user = existing_name
+        
+    return options, user
 
+
+@app.callback(
+    Output('initial-state', 'data'),
+    [Input('select-name', 'value')]
+)
+def store_name(name):
+    if name:
+        return name
 
 ### UPDATE UTILIZATION CHART ###
 @app.callback(
     Output('utilization-chart', 'figure'),
     [Input('select-name', 'value'),
-     Input('util-slider', 'value')]
+     Input('util-slider', 'value'),
+     Input('reset-axes', 'n_clicks')]
 )
-def update_utilization_chart(name, predict_input):
+def update_utilization_chart(name, predict_input, n_clicks):
     if name:
         fig = visualizations.plot_utilization(hours_report, 
                                               name,
@@ -50,6 +67,12 @@ def update_utilization_chart(name, predict_input):
                                               hours_entries)  # add month_class for project breakdown
     else:
         raise PreventUpdate
+    
+    if n_clicks:
+        fig = visualizations.plot_utilization(hours_report, 
+                                              name,
+                                              predict_input,
+                                              hours_entries)
     
     return fig
 
@@ -175,7 +198,7 @@ def enable_reset(clickData):
         return False
 
 
-# reset chart
+# reset projects chart
 @app.callback(
     Output('projects-chart', 'clickData'),
     [Input('clear-clickData', 'n_clicks')]
@@ -183,7 +206,23 @@ def enable_reset(clickData):
 def clear_clickData(n_clicks):
     if n_clicks:
         return None
-    
+
+
+# update valid thru
+@app.callback(
+    Output('valid-thru', 'children'),
+    [Input('select-name', 'value')]
+)
+def get_valid_thru(name):
+    filt = ((hours_entries['User Name'] == name) 
+            & (hours_entries['Hours Date'] <= dt.today()))
+    current_hours = hours_entries.loc[filt, 'Hours Date']
+    max_DT = current_hours.max()
+    max_DT_s = max_DT.strftime('%A, %B %e, %Y')
+    text = f'Data valid through: {max_DT_s}'
+    print(text)
+    return text
+
 # @app.callback(
 #     [Output('select-name2', 'options'),
 #     Output('select-name2', 'value')],

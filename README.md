@@ -10,12 +10,12 @@ Conda environment: utilization-report-2
 
 ##### ToDo:
 
-- [ ] Permanence name from My Utilization to My Projects
+- [x] Persist name from My Utilization to My Projects
 - [ ] Add % to My Projects to see time spent relative to MEH
-- [ ] Check calculation of Utilization for employee type correction (wrong in stacked area (b/c using adjusted MEH) but right in )
+- [x] Check calculation of Utilization for employee type correction (wrong in stacked area (b/c using adjusted MEH) but right in )
 - [ ] Get all emails and staff added to Deltek
-- [ ] Add google tracking
-- [ ] Add date updated
+- [ ] Add google tracking (see below, with first deploy)
+- [x] Add date updated
 - [x] Add top-line instructions for My Projects
 - [ ] Instructions
   - [ ] Clarity around how utilization is calculated
@@ -27,14 +27,15 @@ Conda environment: utilization-report-2
 - [x] Add 'X' for this month's actual utilization/hours
 - [x] Add Strategy Year 
 - [ ] loop through Strategy Year to calculate average utilization (check for lag)
-- [ ] Create username and password list
+- [x] Create username and password list
 - [x] Read in name associated with username for initial load
 - [x] Add Entries Table
-- [ ] Ask JS if we want to weight FTE for employee type (standard or part time)
+- [ ] Ask JS if we want to weight FTE for employee type (standard or part time), now no: leads to very high FTEs for employees who are part time and work full time, seems confusing too and not consistent across utilization and fte
 - [x] Design Projects view
-- [ ] Add weekly summary
+- [ ] Add allocation table
+- [ ] ~~Add weekly summary (too difficult to update, only update weekly)~~
 - [ ] Build team view
-- [ ] Add reset graph button (https://plotly.com/python/custom-buttons/ relayout)
+- [x] Add reset graph button (https://plotly.com/python/custom-buttons/ relayout)
 
 ##### Deltek Changes to Request
 
@@ -226,3 +227,13 @@ Another newer option is the cached callback in dash_extensions. This creates a s
 
 
 To test as you go, run the script from the command line.
+
+### Tracking with Google Analytics
+
+To track with google analytics, set up a new web property on Google Analytics, get the code (e.g., `UA-999999-99) and simply use the command:
+
+```bash
+heroku config:add GOOGLE_ANALYTICS_SITE_ID=UA-999999-99
+```
+
+Push to heroku again.

@@ -1,7 +1,6 @@
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-import dash_bootstrap_components as dbc
 
 # see https://community.plot.ly/t/nolayoutexception-on-deployment-of-multi-page-dash-app-example-code/12463/2?u=dcomfort
 from app import server
@@ -36,6 +35,7 @@ app.index_string = '''
 # Layout placeholder
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
+    dcc.Store(id='initial-state'),
     html.Div(id='page-content')
 ])
 
