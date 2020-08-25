@@ -3,6 +3,8 @@ from dash.exceptions import PreventUpdate
 import dash_table
 from flask import request
 import json
+from datetime import datetime as dt
+import re  # used to regex date picker range output
 
 from components import functions
 from components import visualizations
@@ -18,16 +20,11 @@ hours_report, hours_entries = functions.import_hours()
 @app.callback(
     [Output('select-name', 'options'),
      Output('select-name', 'value')],
-    [Input('fire', 'children')],
-    [State('names_store', 'children')]
+    [Input('fire', 'children')]
 )
-def populate_names(_, stored_names):
-    usernames = {
-        'eanderson@enviroincentives.com': 'Anderson, Erik',
-        'kboysen@enviroincentives.com': 'Boysen, Kristen',
-        'kriley@enviroincentives.com': 'Riley, Kathryn',
-        'cpraul@enviroincentives.com': 'Praul, Chad'
-    }
+def populate_names(_):
+    with open('components/usernames.json') as f:
+        usernames = json.load(f)
     # get list of unique names
     names = hours_report['User Name'].unique()
     names.sort()
@@ -37,6 +34,7 @@ def populate_names(_, stored_names):
     user = usernames.get(user, None)
     
     return options, user
+
 
 ### UPDATE UTILIZATION CHART ###
 @app.callback(
@@ -56,15 +54,66 @@ def update_utilization_chart(name, predict_input):
     return fig
 
 
+### UPDATE PROJECTS CHART
+@app.callback(
+    Output('projects-chart', 'figure'),
+    [Input('select-name', 'value'),
+     Input('date-picker-range', 'start_date'),
+     Input('date-picker-range', 'end_date'),
+     Input('projects-chart', 'clickData')]
+)
+def update_project_chart(name, start_date, end_date, clickData):
+    # parse dates from calendar
+    start_date = dt.strptime(re.split('T| ', start_date)[0], '%Y-%m-%d')
+    end_date = dt.strptime(re.split('T| ', end_date)[0], '%Y-%m-%d')
+    
+    if clickData is None:
+    
+        fig = visualizations.plot_projects(
+            hours_entries, name, start_date, end_date, mode='Projects'
+            )
+    else:
+        click = clickData['points'][0]['y']
+        if click in list(hours_entries['Project'].values):
+            fig = visualizations.plot_projects(
+                hours_entries, name, start_date, end_date, mode='Tasks', project=click
+                )
+        elif click in list(hours_entries['Task Name'].values):
+            raise PreventUpdate
+        
+    return fig
+
+
 ### UPDATE TABLE ###
 @app.callback(
     Output('entry-table', 'children'),
-    [Input('select-name', 'value')]
+    [Input('select-name', 'value'),
+     Input('date-picker-range', 'start_date'),
+     Input('date-picker-range', 'end_date'),
+     Input('projects-chart', 'clickData')]
 )
-def update_entry_table(name):
+def update_entry_table(name, start_date, end_date, clickData):
+    # parse dates from calendar
+    start_date = dt.strptime(re.split('T| ', start_date)[0], '%Y-%m-%d')
+    end_date = dt.strptime(re.split('T| ', end_date)[0], '%Y-%m-%d')
+    
     if name:
         filt = ((hours_entries['User Name'] == name) 
-                & (hours_entries['Hours Date'] >= '2020-06-01'))
+                & (hours_entries['Hours Date'] >= start_date)
+                & (hours_entries['Hours Date'] <= end_date))
+        if clickData:
+            click = clickData['points'][0]['y']
+            if click in list(hours_entries['Project'].values):
+                filt = ((hours_entries['User Name'] == name) 
+                    & (hours_entries['Hours Date'] >= start_date)
+                    & (hours_entries['Hours Date'] <= end_date)
+                    & (hours_entries['Project'] == click))
+            elif click in list(hours_entries['Task Name'].values):
+                filt = ((hours_entries['User Name'] == name) 
+                    & (hours_entries['Hours Date'] >= start_date)
+                    & (hours_entries['Hours Date'] <= end_date)
+                    & (hours_entries['Task Name'] == click))               
+                
         columns = ['Classification', 'Project', 'Task Name', 'Hours Date', 
                    'Entered Hours', 'Comments']
         df = hours_entries.loc[filt, columns]
@@ -113,3 +162,46 @@ def update_entry_table(name):
         )
         
         return table
+
+# enable reset button
+@app.callback(
+    Output('clear-clickData', 'disabled'),
+    [Input('projects-chart', 'clickData')]
+)
+def enable_reset(clickData):
+    if clickData is None:
+        return True
+    else:
+        return False
+
+
+# reset chart
+@app.callback(
+    Output('projects-chart', 'clickData'),
+    [Input('clear-clickData', 'n_clicks')]
+)
+def clear_clickData(n_clicks):
+    if n_clicks:
+        return None
+    
+# @app.callback(
+#     [Output('select-name2', 'options'),
+#     Output('select-name2', 'value')],
+#     [Input('fire', 'children')]
+# )
+# def populate_names2(_, stored_names):
+#     usernames = {
+#         'eanderson@enviroincentives.com': 'Anderson, Erik',
+#         'kboysen@enviroincentives.com': 'Boysen, Kristen',
+#         'kriley@enviroincentives.com': 'Riley, Kathryn',
+#         'cpraul@enviroincentives.com': 'Praul, Chad'
+#     }
+#     # get list of unique names
+#     names = hours_report['User Name'].unique()
+#     names.sort()
+#     options = [{'label': name, 'value': name} for name in names]
+#     # get names
+#     user = request.authorization['username']
+#     user = usernames.get(user, None)
+    
+#     return options, user

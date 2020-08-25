@@ -3,6 +3,7 @@ import dash_html_components as html
 import dash_bootstrap_components as dbc
 import dash_table
 import dash_daq as daq
+from datetime import datetime as dt
 
 from components import functions
 
@@ -18,22 +19,17 @@ from app import app
 
 ### DIV STORES ###
 hours_report = html.Div(id='hours-report', style={'display': 'none'})
-names = html.Div(id='names', style={'display': 'none'})
 fire_me = html.Div(id='fire', children=[], style={'display': 'none'})
-names_store = html.Div(id='names_store', style={'display': 'none'})
 ### NAV BAR ###
 # Nav Bar
 LOGO = app.get_asset_url('ei-logo-white.png')
 
 # nav item links
 nav_items = dbc.Container([
-    dbc.NavItem(dbc.NavLink('Personal Utilization', href='/')),
-    dbc.NavItem(dbc.NavLink('Update Allocations', href='/apps/app1'))
+    dbc.NavItem(dbc.NavLink('My Utilization', href='/')),
+    dbc.NavItem(dbc.NavLink('My Projects', href='/my_projects'))
 ]
 )
-
-# overwrite nav items for initial deploy
-nav_items=dbc.Container([])
 
 # navbar with logo
 navbar = dbc.Navbar(
@@ -49,7 +45,7 @@ navbar = dbc.Navbar(
                     align="center",
                     no_gutters=True,
                 ),
-                href="/",
+                # href="/",
             ),
             dbc.NavbarToggler(id="navbar-toggler"),
             dbc.Collapse(
@@ -76,6 +72,7 @@ select_org = dcc.Dropdown(
 select_name = dcc.Dropdown(
     id='select-name',
     placeholder='Begin typing to find your name',
+    persistence=True,
     multi=False
 )
 
@@ -96,7 +93,7 @@ util_card = dbc.Card(
 util_card = dcc.Graph(id='utilization-chart',
                           config={'displayModeBar': 'hover',
                                   'doubleClick': False,
-                                  'scrollZoom': True,
+                                  'scrollZoom': False,
                                   'modeBarButtonsToRemove': [
                                        'zoom2d', 'select2d', 'lasso2d', 
                                       'zoomIn2d', 'zoomOut2d', 'autoScale2d', 
@@ -188,13 +185,6 @@ util_slider = daq.Slider(
     marks={'0': 'OFF'}
 )  
 
-### TABLE ###
-entry_table = dbc.Container(
-    dbc.Row(
-        dbc.Col(id='entry-table', width=12)
-    )
-)
-
 ### DROP DOWN ROW ###
 drop_downs = dbc.Container(
     [
@@ -269,11 +259,84 @@ layout_main = html.Div([
     drop_downs,
     dbc.Container(utilization_display),
     html.Br(),
-    entry_table,
     hours_report,
-    fire_me,
-    names_store
+    fire_me
 ])
+
+
+### My Projects Layout ###
+### INSTRUCTIONS ###
+instruction_text = [
+    "Explore the projects and tasks you've been working on.",
+    html.Br(), html.Br(),
+    html.B("Use the date selector to filter by date. "
+           "Click in the bar chart to see tasks related to each project. "
+           "Review time entries and comments in the table below. "
+           "Click 'Reset' to start over."),
+    html.Br(), html.Br()
+]
+
+# DATE PICKER
+date_picker = dcc.DatePickerRange(
+                id='date-picker-range',
+                start_date=dt.today().strftime('%Y-%m-01'),
+                min_date_allowed='2019-04-01',
+                end_date=dt.today().strftime('%Y-%m-%d'),
+                number_of_months_shown=2,
+                persistence=True,
+                updatemode='bothdates',
+                style={'borderWidth': 0}  
+                )
+
+# Date picker and select name drop down
+user_input = dbc.Container(
+    [
+        dbc.Row(
+            [dbc.Col(date_picker, sm=6, md=6, lg=4),
+             dbc.Col(select_name, sm=6, md=6, lg=8)]
+        )
+    ]
+)
+
+# RESET CHART
+reset_chart = dbc.Button("Reset", id='clear-clickData',
+            color='secondary', 
+            outline=True, size='sm')
+
+### PROJECTS CHART ###
+projects_graph = dcc.Graph(id='projects-chart',
+                          config={'displayModeBar': False,
+                                  'doubleClick': False,
+                                  'scrollZoom': False,
+                                  'modeBarButtonsToRemove': [
+                                       'zoom2d', 'select2d', 'lasso2d', 
+                                      'zoomIn2d', 'zoomOut2d', 'autoScale2d', 
+                                      'resetScale2d', 'hoverClosestCartesian',
+                                      'hoverCompareCartesian'
+                                      ],
+                                  'displaylogo': False}
+                          )
+
+### TABLE ###
+entry_table = dbc.Container(
+    dbc.Row(
+        dbc.Col(id='entry-table', width=12)
+    )
+)
+
+### LAYOUT ###
+projects_layout = html.Div([
+    navbar,
+    dbc.Container(instruction_text),
+    user_input,
+    html.Br(),
+    dbc.Container(reset_chart),
+    dcc.Loading(dbc.Container(projects_graph)),
+    html.Br(),
+    entry_table,
+    fire_me
+])
+
 
 allocation_table = dash_table.DataTable(
         id='allocation-table',

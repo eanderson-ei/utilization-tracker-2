@@ -94,6 +94,8 @@ def import_hours():
     return df, entries
 
 
+### NOT USED ###
+
 def get_month_entries(hours_entries):
     df = hours_entries.groupby(['User Name', 'Classification', 'Project', 
                                 'Entry Year', 'Entry Month']).sum()
@@ -121,6 +123,7 @@ def get_classification(month_entries):
     
     return df
 
+###
 
 def predict_utilization(idf, predict_input):
     # calculated predicted values
@@ -180,3 +183,30 @@ def predict_utilization(idf, predict_input):
     print(idf)
         
     return idf, max_DT
+
+
+def get_project_totals(idf, start_date, end_date):
+    filt = (idf['Hours Date'] >= start_date) & (idf['Hours Date'] <= end_date) 
+    entries_by_date = idf.loc[filt, :]
+    
+    project_totals = entries_by_date.groupby('Project')['Entered Hours'].sum()
+    
+    project_totals.sort_values(inplace=True)
+    
+    print(project_totals)
+    
+    return project_totals
+
+
+def get_task_totals(idf, start_date, end_date, project):
+    filt = ((idf['Hours Date'] >= start_date) & (idf['Hours Date'] <= end_date)
+            & (idf['Project'] == project))
+    entries_by_date = idf.loc[filt, :]
+    
+    task_totals = entries_by_date.groupby('Task Name')['Entered Hours'].sum()
+    
+    task_totals.sort_values(inplace=True)
+    
+    print(task_totals)
+    
+    return task_totals

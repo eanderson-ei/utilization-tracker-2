@@ -10,6 +10,14 @@ Conda environment: utilization-report-2
 
 ##### ToDo:
 
+- [ ] Permanence name from My Utilization to My Projects
+- [ ] Add % to My Projects to see time spent relative to MEH
+- [ ] Get all emails added to Deltek
+- [x] Add top-line instructions for My Projects
+- [ ] Instructions
+  - [ ] Clarity around how utilization is calculated
+  - [ ] Clarity around what goes into utilization
+
 - [x] Add prediction function
 - [x] Plot prediction
 - [x] Populate prediction annotation
@@ -18,10 +26,10 @@ Conda environment: utilization-report-2
 - [x] Add Strategy Year 
 - [ ] loop through Strategy Year to calculate average utilization (check for lag)
 - [ ] Create username and password list
-- [ ] Read in name associated with username for initial load
+- [x] Read in name associated with username for initial load
 - [x] Add Entries Table
 - [ ] Ask JS if we want to weight FTE for employee type (standard or part time)
-- [ ] Design Projects view
+- [x] Design Projects view
 - [ ] Add weekly summary
 - [ ] Build team view
 - [ ] Add reset graph button (https://plotly.com/python/custom-buttons/ relayout)
@@ -34,10 +42,15 @@ Conda environment: utilization-report-2
 - [ ] Fill in missing data for Org Name or otherwise assign staff to Practice Area
 - [ ] Add 'Preferred Name' for employees (e.g., Geeta)
 - [x] Add column to allow assigning project to PA and splitting revenue between Practice Areas (Projects have one or  many Practice Areas--managed through additional timecodes)
+- [ ] Join Projects and Tasks 
+- [ ] Join Orgs and Projects
+- [ ] Change 'Projects' to 'Tasks'
 
 **To maintain**:
 
-Data from the Scoreboard should be pasted into the Utilization Input datasheet, 'TARGETS' worksheet, each month.
+Download Utilization and Projects Monday AM, run compile_hours_working.py.
+
+(If Projects not run, will warn if new projects not added)
 
 **To deploy changes:**
 
@@ -60,7 +73,7 @@ Data from the Scoreboard should be pasted into the Utilization Input datasheet, 
 - [x] Login system (stretch: registration)
   * Go with everybody has the same password for now. Use login info to personalize initial load.
   * Else you could try to set up a flask authentication system. But that is stretch.
-- [x] Database for storing burn rates and allocations
+- [ ] Database for storing burn rates and allocations
   * https://www.youtube.com/watch?v=G65iy0AmthM (CRUD Data table)
   * https://www.youtube.com/watch?v=Mf3s0P4aVKw (Part 2, Connect to Database)
 - [ ] SQLAlchemy

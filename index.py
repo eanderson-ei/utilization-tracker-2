@@ -7,7 +7,7 @@ import dash_bootstrap_components as dbc
 from app import server
 
 from app import app
-from layouts import layout_main, allocation_layout
+from layouts import layout_main, projects_layout
 import callbacks
 
 # see https://dash.plot.ly/external-resources to alter header, footer and favicon
@@ -44,8 +44,8 @@ app.layout = html.Div([
 def display_page(pathname):
     if pathname == '/':
         return layout_main
-    elif pathname == '/apps/app1':
-         return allocation_layout
+    elif pathname == '/my_projects':
+         return projects_layout
     # elif pathname == '/apps/app2':
     #      return layout2
     else:

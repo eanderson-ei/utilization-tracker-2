@@ -8,6 +8,7 @@ import numpy as np
 from datetime import datetime as dt
 import os
 import sys
+import json
 
 start = dt.now()
 
@@ -18,6 +19,7 @@ downloads = r'C:/Users/Erik/Downloads/'
 # Name of the file, excluding any appended numeric distinguisher for repeats
 util_file = 'Utilization Tabular'
 projects_file = 'Projects Tabular'
+employees_file = 'Employees'
 # FUNCTIONS
 
 def get_latest_file(downloads, file_name):
@@ -334,7 +336,50 @@ def calc_utilization(idf, first_last, idv_emp_type, days_remaining):
     return idf
 
 
+def update_employees(e_df):
+    # create user name column
+    e_df['First Name'] = e_df['First Name'].str.strip()  # remove whitespace before Replicon first names
+    e_df['Last Name'] = e_df['Last Name'].str.strip()
+    e_df['User Name'] = e_df[['Last Name', 'First Name']].apply(
+        lambda x: ', '.join(x), axis=1)
+    
+    # drop inactive employees
+    filt = e_df['Active Flag'] == 'Y'
+    e_df = e_df.loc[filt, :].copy()
+    
+    # convert to dictionary
+    usernames = e_df.set_index('E-mail Address')
+    emp_dict = usernames['User Name'].to_dict()
+    
+    # save as json
+    with open('components/usernames.json', 'w') as f:
+        json.dump(emp_dict, f, indent=4)
+        
+    # associate all emails with password 'incentives'
+    #TODO: allow for custom passwords
+    usernames['password'] = 'incentives'
+    pass_dict = usernames['password'].to_dict()
+    
+    # save as json to secrets
+    with open('secrets/passwords.json', 'r+') as f:
+        existing_emp = json.load(f)
+        for key in pass_dict.keys():
+            if not key in existing_emp:
+                print(f'UPDATE ENV VAR: {key} IS NEW!')
+        json.dump(pass_dict, f, indent=4)
+    
+    # return active employee names for processing
+    return usernames['User Name'].values
+
+
 def compile_hours():
+    # Save employees login info
+    employees_in = get_latest_file(downloads, employees_file)
+    e_df = pd.read_csv(employees_in, sep='\t',
+                       encoding='utf_16_le')
+    names = update_employees(e_df)
+    print (f"...saved to components/usernames.json")
+    
     # Authorize google sheets
     client = auth_gspread()
     
@@ -375,28 +420,31 @@ def compile_hours():
     # empty list for idfs
     idf_list = []
     
-    # names to iterate
+    # names from hours report
     names_list = hours_report['User Name'].unique()
     names_list.sort()
     
-    # for each employee, build hours report
-    for name in names_list:
-        # build monthly hours report
-        idf, first_last = idv_monthly_hours(hours_report, name)
+    # for each employee, build hours report (names from employees report)
+    for name in names: 
+        if name in names_list:
+            # build monthly hours report
+            idf, first_last = idv_monthly_hours(hours_report, name)
 
-        # add MEH
-        idf, days_remaining = add_meh(client, idf, first_last, dates, months)
+            # add MEH
+            idf, days_remaining = add_meh(client, idf, first_last, dates, months)
 
-        # calculate utilization
-        idv_emp_type = emp_type.get(name)
-        utilization = calc_utilization(idf, first_last, idv_emp_type, days_remaining)
-        
-        # add name and drop index
-        utilization['User Name'] = name
-        utilization.reset_index(inplace=True)
-        
-        # add to idf_list
-        idf_list.append(utilization)
+            # calculate utilization
+            idv_emp_type = emp_type.get(name)
+            utilization = calc_utilization(idf, first_last, idv_emp_type, days_remaining)
+            
+            # add name and drop index
+            utilization['User Name'] = name
+            utilization.reset_index(inplace=True)
+            
+            # add to idf_list
+            idf_list.append(utilization)
+        else:
+            print(f'{name} not present in hours report')
     
     # union all idfs
     df = pd.concat(idf_list)

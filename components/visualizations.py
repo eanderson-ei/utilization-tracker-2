@@ -238,6 +238,7 @@ def plot_utilization(df, name, predict_input, entries,  # add month_class for pr
                       yaxis_showgrid=False,
                       autosize=False,
                       height=500,
+                      dragmode='pan'
                       )
     
     # Update yaxes
@@ -300,8 +301,78 @@ def plot_utilization(df, name, predict_input, entries,  # add month_class for pr
     return fig
 
 
-def plot_projects():
-    pass
+def plot_projects(df, name, start_date, end_date, mode, project=None):
+    # subset df and entries by user
+    idf = df[df['User Name'] == name].copy()
+    
+    bar_width = .7
+    
+    fig = go.Figure()
+    
+    if mode == 'Projects':
+        project_totals = functions.get_project_totals(idf, start_date, end_date)
+
+        fig.add_traces(go.Bar(
+            x=project_totals,
+            y=project_totals.index,
+            name='Projects',
+            orientation = 'h',
+            width=bar_width,
+            showlegend=False
+        ))
+        
+        bars = project_totals
+    
+    elif mode == 'Tasks':
+        task_totals = functions.get_task_totals(idf, start_date, end_date, project)
+        task_totals
+        
+        fig.add_traces(go.Bar(
+            x=task_totals,
+            y=task_totals.index,
+            name='Tasks',
+            orientation = 'h',
+            width=bar_width,
+            showlegend=False
+        ))
+        
+        bars = task_totals
+    
+    # Add hours annotation
+    for idx, hours in enumerate(bars):
+        if hours > 0:
+            fig.add_annotation(
+                x=0, y=idx,
+                xanchor='right',
+                text=f'{hours:,.1f}',
+                font_color=text_grey,
+                showarrow=False
+            )
+    
+    # Update layout
+    num_bars = len(bars)
+    if num_bars < 5:
+        bottom_margin = 200
+    else: 
+        bottom_margin = 80
+        
+    fig.update_layout(plot_bgcolor='white',
+                      xaxis_showgrid=True,
+                      yaxis_showgrid=False,
+                      autosize=False,
+                      height=(num_bars-1) * 40 + (60 + bottom_margin)
+                      )
+    
+    # Add space for Calendar drop down
+    fig.update_layout(margin=dict(l=0, r=0, t=20, b=bottom_margin, pad=30))
+    
+    # Update font
+    fig.update_layout(font=dict(family='Gill Sans MT, Arial', 
+                                size=14, color=text_grey))
+    
+    return fig
+    
+    
 
 if __name__=='__main__':
     import pygsheets
