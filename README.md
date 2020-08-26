@@ -237,3 +237,24 @@ heroku config:add GOOGLE_ANALYTICS_SITE_ID=UA-999999-99
 ```
 
 Push to heroku again.
+
+### Deploy from test to production
+
+You may want to set up a test app for user testing and other needs before pushing your new app out. Simply set up a heroku app like you would (I append -test to the end to make it clear it's a test environment).
+
+To deploy from the test to production, rename the remote
+
+```bash
+heroku git:remote -a <app name>
+# like heroku git:remote -a ei-utilization
+```
+
+Then, simply push code to master
+
+```bash
+git push heroku master
+```
+
+You should now see that your production app reflects the new app.
+
+For the Utilization Report, I needed a fully new directory to start the second version since I was changing to Dash/Plotly from S/Matplotlib. I created a new directory, built the app, deployed to a test heroku app, conducted user testing, then renamed the remote and pushed to production. I maintained the test environment so I could switch back to it if I wanted to do more user testing of new features.
