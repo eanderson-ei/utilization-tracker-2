@@ -35,7 +35,8 @@ LOGO = app.get_asset_url('ei-logo-white.png')
 # nav item links
 nav_items = dbc.Container([
     dbc.NavItem(dbc.NavLink('My Utilization', href='/')),
-    dbc.NavItem(dbc.NavLink('My Projects', href='/my_projects'))
+    dbc.NavItem(dbc.NavLink('My Projects', href='/my_projects')),
+    # dbc.NavItem(dbc.NavLink('Allocation', href='/allocation'))
 ]
 )
 
@@ -380,7 +381,7 @@ allocation_table = dash_table.DataTable(
 # Allocation Layout
 allocation_layout = html.Div([
     navbar,
-    allocation_table
+    dbc.Container(allocation_table)
 ])
 
 

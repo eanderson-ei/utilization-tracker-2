@@ -10,22 +10,16 @@ Conda environment: utilization-report-2
 
 ##### ToDo:
 
-- [x] Persist name from My Utilization to My Projects
+- [ ] Refresh google sheets on page refresh (see [video 2](https://www.youtube.com/watch?v=Mf3s0P4aVKw))
 - [ ] Add % to My Projects to see time spent relative to MEH
-- [x] Check calculation of Utilization for employee type correction (wrong in stacked area (b/c using adjusted MEH) but right in )
-- [ ] Get all emails and staff added to Deltek
-- [ ] Add google tracking (see below, with first deploy)
-- [x] Add date updated
-- [x] Add top-line instructions for My Projects
-- [ ] Instructions
+- [ ] Change date range in My Projects from today's month to last valid date's month
+- [ ] Format hours in Entries table to floats rather than strings
+- [ ] Record video tutorial for use, create instructions tab with embedded video and
   - [ ] Clarity around how utilization is calculated
   - [ ] Clarity around what goes into utilization
-- [x] Add prediction function
-- [x] Plot prediction
-- [x] Populate prediction annotation
-- [x] Add Instructions
-- [x] Add 'X' for this month's actual utilization/hours
-- [x] Add Strategy Year 
+- [x] Check calculation of Utilization for employee type correction (wrong in stacked area (b/c using adjusted MEH) but right in )
+- [ ] Get all emails and staff added to Deltek
+- [ ] Get google tracking working
 - [ ] loop through Strategy Year to calculate average utilization (check for lag)
 - [x] Create username and password list
 - [x] Read in name associated with username for initial load
@@ -236,8 +230,6 @@ To track with google analytics, set up a new web property on Google Analytics, g
 heroku config:add GOOGLE_ANALYTICS_SITE_ID=UA-999999-99
 ```
 
-Push to heroku again.
-
 ### Deploy from test to production
 
 You may want to set up a test app for user testing and other needs before pushing your new app out. Simply set up a heroku app like you would (I append -test to the end to make it clear it's a test environment).
@@ -249,12 +241,43 @@ heroku git:remote -a <app name>
 # like heroku git:remote -a ei-utilization
 ```
 
-Then, simply push code to master
+Then, simply push code to master using --force to overwrite the existing repo
 
 ```bash
-git push heroku master
+git push heroku master --force
 ```
 
 You should now see that your production app reflects the new app.
 
 For the Utilization Report, I needed a fully new directory to start the second version since I was changing to Dash/Plotly from S/Matplotlib. I created a new directory, built the app, deployed to a test heroku app, conducted user testing, then renamed the remote and pushed to production. I maintained the test environment so I could switch back to it if I wanted to do more user testing of new features.
+
+## Future Directions
+
+### Allocation table
+
+In the My Projects view, show the planned hours based on semester and monthly effort planning (Effort Planner and Scoreboard).
+
+Ultimately, the allocation table could replace the Scoreboard, but for now I'd be worried about too many people editing the table at once.
+
+Ideally, the Scoreboard would start with a suggested burn rate for each person based on their effort planner.
+
+#### Person View
+
+Dropdown select a person. For that person, show effort per month per project (Projects in rows, months in columns). Additional drop down for Semester (1 or 2). Aspirationally, show utilization and FTE projections per month as total rows.
+
+Allow adding projects.
+
+#### Team view
+
+Dropdown select a team. For that team, show authorized staff as rows and months as columns. Allow adding staff.
+
+#### Functionality
+
+Save changes to allocation in database.
+
+Show projects bar chart with hours expected as of that date (prorated if needed) (i.e., completeness)
+
+Add tab to show FTE/Utilization expectation vs actual over time for each month.
+
+Tabs: cumulative/over time
+

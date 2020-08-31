@@ -6,7 +6,7 @@ from dash.dependencies import Input, Output, State
 from app import server
 
 from app import app
-from layouts import layout_main, projects_layout
+from layouts import layout_main, projects_layout, allocation_layout
 import callbacks
 
 # see https://dash.plot.ly/external-resources to alter header, footer and favicon
@@ -46,8 +46,8 @@ def display_page(pathname):
         return layout_main
     elif pathname == '/my_projects':
          return projects_layout
-    # elif pathname == '/apps/app2':
-    #      return layout2
+    elif pathname == '/allocation':
+         return allocation_layout
     else:
         return '404'
 
