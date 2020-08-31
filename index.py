@@ -18,6 +18,17 @@ app.index_string = '''
         <title>Utilization Report</title>
         {%favicon%}
         {%css%}
+        
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-151885346-2"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-151885346-2');
+        </script>
+
     </head>
     <body>
         <div></div>
