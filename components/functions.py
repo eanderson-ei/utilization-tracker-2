@@ -210,3 +210,45 @@ def get_task_totals(idf, start_date, end_date, project):
     print(task_totals)
     
     return task_totals
+
+
+def read_table(table_name, con):
+    # read from database
+    df = pd.read_sql_table(table_name, con=con)
+        
+    return df
+
+
+def build_allocation_table(df):
+    # calcualte DT column
+    df['DT'] = pd.to_datetime(df['Entry Year'].astype(str)
+                               + df['Entry Month'], 
+                               format='%Y%b')
+    df.sort_values(by=['DT'], inplace=True)
+    
+    # add strategic year helper column
+    def strategy_year(row):
+        if row['DT'].month < pd.to_datetime('Apr', format='%b').month:
+            return str(row['DT'].year - 1) + "-" + str(row['DT'].year)
+        else:
+            return str(row['DT'].year) + "-" + str(row['DT'].year + 1)
+    
+        
+    df['Strategy Year'] = df.apply(strategy_year, axis=1)
+    
+    # add semester helper column
+    def semester(row):
+        if (row['DT'].month < pd.to_datetime('Nov', format='%b').month and
+        row['DT'].month > pd.to_datetime('Mar', format='%b').month):
+            return 'Sem 1'
+        else: 
+            return 'Sem 2'
+    
+    
+    df['Semester'] = 'None'
+    for strategy_year in df['Strategy Year'].unique():
+        filt = df['Strategy Year'] == strategy_year
+        df.loc[filt, 'Semester'] = df.loc[filt, :].apply(semester, axis=1)
+        
+    return df    
+    

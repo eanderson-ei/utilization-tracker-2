@@ -10,38 +10,56 @@ Conda environment: utilization-report-2
 
 ##### ToDo:
 
-- [ ] Refresh google sheets on page refresh (see [video 2](https://www.youtube.com/watch?v=Mf3s0P4aVKw))
+*Near term*
+
 - [ ] Add % to My Projects to see time spent relative to MEH
 - [ ] Change date range in My Projects from today's month to last valid date's month
 - [ ] Format hours in Entries table to floats rather than strings
+- [ ] Clear click data when selecting new employee
+- [ ] Fix employee name store when two or more people are in the app (use session variable in Flask instead of dcc.Store).
+- [ ] Fix projects chart not updating when new dates are selected in drill-down mode.
+- [ ] Add allocation table
+  - [x] Add all months to table display
+  - [x] Sort months
+  - [x] Disallow editing of projects
+  - [x] Right align projects, users
+  - [x] Increase width of above to 2x
+  - [ ] add conditional formatting to cells
+  - [ ] highlight current month
+  - [ ] Wire save button
+  - [ ] Change Add Project button text based on active_tab
+  - [ ] Wire Add Project button
+  - [ ] Add FTE sum row (by-person)
+  - [ ] Add Util sum row (by-person)
+  - [ ] Add total row (by-project)
+  - [ ] Connect to my projects
+- [ ] Set calendar min to April 2020
+
+*Long term*
+
 - [ ] Record video tutorial for use, create instructions tab with embedded video and
   - [ ] Clarity around how utilization is calculated
   - [ ] Clarity around what goes into utilization
-- [x] Check calculation of Utilization for employee type correction (wrong in stacked area (b/c using adjusted MEH) but right in )
-- [ ] Get all emails and staff added to Deltek
-- [ ] Get google tracking working
+
+- [ ] Refresh google sheets on page refresh (see [video 2](https://www.youtube.com/watch?v=Mf3s0P4aVKw))
+- [ ] Refactor code based on example (see next up list in OneNote)
 - [ ] loop through Strategy Year to calculate average utilization (check for lag)
-- [x] Create username and password list
-- [x] Read in name associated with username for initial load
-- [x] Add Entries Table
 - [ ] Ask JS if we want to weight FTE for employee type (standard or part time), now no: leads to very high FTEs for employees who are part time and work full time, seems confusing too and not consistent across utilization and fte
-- [x] Design Projects view
 - [ ] Add allocation table
-- [ ] ~~Add weekly summary (too difficult to update, only update weekly)~~
 - [ ] Build team view
-- [x] Add reset graph button (https://plotly.com/python/custom-buttons/ relayout)
 
 ##### Deltek Changes to Request
 
 - [ ] Add Column for Standard Time Categories (Billable, R&D, G&A, Time Off, NBD & Marketing). Confirm these with JS first.
 - [ ] Rename column header User Defined Code 3 to ...
+- [ ] Create 'Projects'-like field (i.e. User Defined Code 3) for Indirect projects
 - [ ] Switch Unbillable time codes to R&D (or appropriate category)
 - [ ] Fill in missing data for Org Name or otherwise assign staff to Practice Area
 - [ ] Add 'Preferred Name' for employees (e.g., Geeta)
-- [x] Add column to allow assigning project to PA and splitting revenue between Practice Areas (Projects have one or  many Practice Areas--managed through additional timecodes)
 - [ ] Join Projects and Tasks 
 - [ ] Join Orgs and Projects
 - [ ] Change 'Projects' to 'Tasks'
+- [ ] Set up login system to change passwords
 
 **To maintain**:
 
@@ -49,11 +67,26 @@ Conda environment: utilization-report-2
 
 2. Activate conda environment `conda activate utilization-report-2`
 
-3. Run compile_hours_working.py.
+3. Run `scripts/compile_hours_working.py`.
 
 4. Check CLI for warnings
 
-   1. If a new employee was added, copy `passwords.json` into the Environment Variables Config at heroku for this app
+   1. If a new employee was added, 
+
+      1. copy `passwords.json` into the Environment Variables Config at heroku for this app
+
+      2. commit the updated `usernames.json` file to git and heroku
+
+         ```bash
+         git pull
+         git add compnents/usernames.json
+         git commit -m "add new user"
+         git push origin master
+         git push heroku master
+         ```
+
+         
+
    2. If a project was billed against but is not in the projects table on Deltek, a CSV will be saved out to `data/` showing which entries were missed. Manually add this project to the code (where Chad's project was added)
 
 5. Restart the app (to load changes to the Google Sheet)
@@ -67,8 +100,7 @@ Conda environment: utilization-report-2
 
 1. Deltek
    1. New projects are added along with new tasks
-   2. New employees are added 
-   3. New employees are assigned email addresses
+   2. New employees are added and assigned email addresses
 
 **To deploy changes:**
 
@@ -91,7 +123,7 @@ Conda environment: utilization-report-2
 - [x] Login system (stretch: registration)
   * Go with everybody has the same password for now. Use login info to personalize initial load.
   * Else you could try to set up a flask authentication system. But that is stretch.
-- [ ] Database for storing burn rates and allocations
+- [x] Database for storing burn rates and allocations
   * https://www.youtube.com/watch?v=G65iy0AmthM (CRUD Data table)
   * https://www.youtube.com/watch?v=Mf3s0P4aVKw (Part 2, Connect to Database)
 - [ ] SQLAlchemy
@@ -224,6 +256,45 @@ To test as you go, run the script from the command line.
 
 ### Tracking with Google Analytics
 
+To track with Google Analytics, set up a new web property on Google Analytics, get the script, and paste it into the header tag in `index.py`.
+
+```python
+app.index_string = '''
+<!DOCTYPE html>
+<html>
+    <head>
+        {%metas%}
+        <title>Utilization Report</title>
+        {%favicon%}
+        {%css%}
+        
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-151885346-2"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-151885346-2');
+        </script>
+
+    </head>
+    <body>
+        <div></div>
+        {%app_entry%}
+        <footer>
+            {%config%}
+            {%scripts%}
+            {%renderer%}
+        </footer>
+        <div></div>
+    </body>
+</html>
+'''
+```
+
+Optionally, you can store the tracking code as an environment variable as below, and use an f-string to sub in the environment variable for the hard-coded value. Because the property id is served as plain text online anyway, I'm not sure it's worth it.
+
 To track with google analytics, set up a new web property on Google Analytics, get the code (e.g., `UA-999999-99) and simply use the command:
 
 ```bash
@@ -281,3 +352,12 @@ Add tab to show FTE/Utilization expectation vs actual over time for each month.
 
 Tabs: cumulative/over time
 
+### My Teams view
+
+simply sub the person drop down for the team drop down (subset by project rather than task); swap 'Person' for 'Project' in entries table. 
+
+Add Revenue, Margin as BANs for filter by date
+
+Add tab to show team view margins, revenue, over time (i.e., per month revenue and margin). 
+
+Margin calculation requires allocation of staff to team to distribute costs.

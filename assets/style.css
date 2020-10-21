@@ -5,6 +5,11 @@
 div.plotly-notifier {
     visibility: hidden;
   }
+
+.dash-spreadsheet .row {
+    flex-wrap: nowrap;
+  }
+
   
 /* table{
     table-layout: fixed;

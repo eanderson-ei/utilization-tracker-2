@@ -13,11 +13,17 @@ app = dash.Dash(__name__, server=server,
                 external_stylesheets=external_stylesheets, 
                 show_undo_redo=True)
 app.config.suppress_callback_exceptions = True
-app.server.config['SQLALCHEM_TRACK_MODIFICATIONS'] = False
+app.server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# app.server.config["SQLALCHEMY_DATABASE_URI"] = ""
+# DO NOT PUT CARRIAGE RETURNS IN CONNECTION STRING !!!
+# db connection for local, REPLACE PASSWORD BUT DON'T COMMIT
+# app.server.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:Sup249249*@localhost/test"
+
+# db connection for heroku 
+app.server.config["SQLALCHEMY_DATABASE_URI"] = "postgres://lnjlwhszyveeql:54058548e3aef6f075340d5a41d21dd517008adfbf0b12a44e3ce19e18d596a4@ec2-54-204-26-236.compute-1.amazonaws.com:5432/d7hkmgh5gmk0b4"
 
 db = SQLAlchemy(app.server)
+
 
 # Keep this out of source code repository - save in a file or a database
 # Local dev
