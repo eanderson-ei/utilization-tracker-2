@@ -44,7 +44,7 @@ Conda environment: utilization-report-2
 - [ ] Refresh google sheets on page refresh (see [video 2](https://www.youtube.com/watch?v=Mf3s0P4aVKw))
 - [ ] Refactor code based on example (see next up list in OneNote)
 - [ ] loop through Strategy Year to calculate average utilization (check for lag)
-- [ ] Ask JS if we want to weight FTE for employee type (standard or part time), now no: leads to very high FTEs for employees who are part time and work full time, seems confusing too and not consistent across utilization and fte
+- [x] Ask JS if we want to weight FTE for employee type (standard or part time), now no: leads to very high FTEs for employees who are part time and work full time, seems confusing too and not consistent across utilization and fte
 - [ ] Add allocation table
 - [ ] Build team view
 
