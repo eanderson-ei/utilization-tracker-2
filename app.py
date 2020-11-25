@@ -19,9 +19,12 @@ app.server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # db connection for local, REPLACE PASSWORD BUT DON'T COMMIT
 # app.server.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:Sup249249*@localhost/test"
 
-# db connection for heroku 
-app.server.config["SQLALCHEMY_DATABASE_URI"] = "postgres://lnjlwhszyveeql:54058548e3aef6f075340d5a41d21dd517008adfbf0b12a44e3ce19e18d596a4@ec2-54-204-26-236.compute-1.amazonaws.com:5432/d7hkmgh5gmk0b4"
-
+# db connection for heroku
+try:
+    app.server.config["SQLALCHEMY_DATABASE_URI"] = os.environ['DATABASE_URL']
+except:
+    with open ('secrets/database_uri.json') as f:
+        app.server.config["SQLALCHEMY_DATABASE_URI"] = json.load(f).get("DATABASE_URI")
 db = SQLAlchemy(app.server)
 
 

@@ -447,7 +447,7 @@ allocation_layout = html.Div([
     navbar,
     dbc.Container(tabs),
     dbc.Container(filters),
-    dcc.Loading(dbc.Container(allocation_div)),
+    dbc.Container(allocation_div),
     dbc.Container(
         [
             dbc.Row(

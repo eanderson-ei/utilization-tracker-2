@@ -6,24 +6,36 @@ import dash_bootstrap_components as dbc
 from flask import request
 import json
 from datetime import datetime as dt
+from datetime import date
 import pandas as pd
+import numpy as np
 import re  # used to regex date picker range output
 
 from components import functions
 from components import visualizations
 
-from layouts import table_filter, semester_filter
+from layouts import table_filter, semester_filter  # NEEDED?
 
 from app import app, db
 
 sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
                 'Jan', 'Feb', 'Mar']
 
+def get_month_fte(month, year):
+    """returns fte hours given any month and year"""
+    year_months = sem_months[9:] + sem_months[:9]
+    month_idx = year_months.index(month)
+    start_date = date(year, month_idx, 1)
+    end_date = date(year, month_idx+1, 1)
+    days = np.busday_count(start_date, end_date)
+    hours = days * 8
+    return hours
+    
 # Load data 
 hours_report, hours_entries = functions.import_hours()
-# TODO: move to functions
 df = functions.read_table('planned_hrs', db.engine)
 allocation_df = functions.build_allocation_table(df)
+print(allocation_df)
 # calculate DT, semester and strategy year helper columns
 
 # month_entries = functions.get_month_entries(hours_entries)
@@ -401,6 +413,9 @@ def populate_table(active_tab, table_filter, semester):
         pdf.reset_index(inplace=True)
     
     # populate table
+    table_cols = pdf.columns.to_list()
+    table_cols.insert(1, 'Sem')
+    table_cols.insert(2, '% FTE')
     allocation_table = dash_table.DataTable(
         id='allocation-table',
         columns=[{
@@ -408,13 +423,14 @@ def populate_table(active_tab, table_filter, semester):
             'id': str(x),
             'deletable': False,
             'editable': False
-            } if x in ['Project', 'User Name']
-                 else {
-                     'name': str(x),
-                     'id': str(x),
-                     'deletable': False
-                     }
-                 for x in pdf.columns],
+            } if x in ['Project', 'User Name', 'Total']
+            else {
+                'name': str(x),
+                'id': str(x),
+                'type': 'numeric',
+                'deletable': False
+                }
+            for x in table_cols],
         data=pdf.to_dict('records'),
         editable=True,
         row_deletable=False,
@@ -461,3 +477,39 @@ def populate_table(active_tab, table_filter, semester):
         return "No time allocations available"
     else:
         return allocation_table
+
+
+@app.callback(
+    Output('allocation-table', 'data'),
+    [Input('allocation-table', 'data_timestamp')],
+    [State('allocation-table', 'data'),
+     State('allocation-table', 'columns'),
+     State('semester-filter', 'value')]
+)
+def total_rows_and_cols(timestamp, rows, columns, semester):
+    # get year
+    sy = semester.split('|')[1].strip() 
+    # calculate Total column 
+    for row in rows:
+        try: 
+            row['Sem'] = sum([float(val) if key not in ['Project', 'User Name', 'Sem'] and val else 0 for key, val in row.items()])
+            row['% FTE'] = round((row['Sem']/(1211))*100,0)
+        except:
+            row['Sem'] = 0
+    
+    # calculate Total row
+    print(rows)
+    if rows[0]['Project'] == 'Total':
+        rows[0] = {c['id']: sum([float(row[c['id']]) if c['id'] not in ['Project', 'User Name'] and row[c['id']] and row['Project'] != 'Total' else 0 for row in rows]) for c in columns}
+        rows[1] = {}
+    else:
+        # insert total row on initial load
+        rows.insert(0, {c['id']: sum([float(row[c['id']]) if c['id'] not in ['Project', 'User Name'] and row[c['id']] and row['Project'] != 'Total' else 0 for row in rows]) for c in columns})
+        rows.insert(1, {c['id']: round(rows[0][c['id']]/get_month_fte(c['id'], 2020)*100,0) if c['id'] in sem_months else '' for c in columns})
+    # update first column to say 'total'
+    for row in rows:
+        if row['Project'] == 0:
+            row['Project'] = 'Total'
+    
+    return rows
+
