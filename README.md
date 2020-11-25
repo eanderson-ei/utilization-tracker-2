@@ -320,7 +320,7 @@ git push heroku master --force
 
 You should now see that your production app reflects the new app.
 
-For the Utilization Report, I needed a fully new directory to start the second version since I was changing to Dash/Plotly from S/Matplotlib. I created a new directory, built the app, deployed to a test heroku app, conducted user testing, then renamed the remote and pushed to production. I maintained the test environment so I could switch back to it if I wanted to do more user testing of new features.
+For the Utilization Report, I needed a fully new directory to start the second version since I was changing to Dash/Plotly from Streamlit/Matplotlib. I created a new directory, built the app, deployed to a test heroku app, conducted user testing, then renamed the remote and pushed to production. I maintained the test environment so I could switch back to it if I wanted to do more user testing of new features.
 
 ## Future Directions
 
