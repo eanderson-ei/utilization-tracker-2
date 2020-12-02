@@ -39,7 +39,7 @@ LOGO = app.get_asset_url('ei-logo-white.png')
 nav_items = dbc.Container([
     dbc.NavItem(dbc.NavLink('My Utilization', href='/')),
     dbc.NavItem(dbc.NavLink('My Projects', href='/my_projects')),
-    dbc.NavItem(dbc.NavLink('Allocation', href='/allocation'))  # turn on for dev
+    # dbc.NavItem(dbc.NavLink('Allocation', href='/allocation'))  # turn on for dev
 ]
 )
 
