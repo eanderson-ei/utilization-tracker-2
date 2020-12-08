@@ -2,6 +2,7 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import dash_html_components as html 
 import dash_table
+import dash_table.FormatTemplate as FormatTemplate
 import dash_bootstrap_components as dbc
 from flask import request
 import json
@@ -35,7 +36,7 @@ def get_month_fte(month, year):
 hours_report, hours_entries = functions.import_hours()
 df = functions.read_table('planned_hrs', db.engine)
 allocation_df = functions.build_allocation_table(df)
-print(allocation_df)
+
 # calculate DT, semester and strategy year helper columns
 
 # month_entries = functions.get_month_entries(hours_entries)
@@ -357,6 +358,27 @@ def populate_semester_filter(active_tab):
      Input('semester-filter', 'value')]
 )
 def populate_table(active_tab, table_filter, semester):
+    # helper function for column formatting
+    def col_formatter(col):
+        print('formatting')
+        col_format = {
+            'name': str(col),
+            'id': str(col),
+            'deletable': False,
+            'editable': True
+            }
+        if col in ['Project', 'User Name', 'Total']:
+            col_format['editable'] = False
+        elif col in ['% FTE']:
+            print('found FTE')
+            col_format['type'] = 'numeric'
+            col_format['format'] = FormatTemplate.percentage(0)
+        else:
+            col_format['type'] = 'numeric'
+        
+        return col_format
+            
+        
     # filter by person, project or month depending on active tab and
     # filter by semester/month dropdown
     if active_tab == 'by-person':
@@ -411,26 +433,15 @@ def populate_table(active_tab, table_filter, semester):
         pdf = df.pivot(index='User Name', columns='Project',
                        values='Hours')
         pdf.reset_index(inplace=True)
-    
+        
+       
     # populate table
     table_cols = pdf.columns.to_list()
     table_cols.insert(1, 'Sem')
     table_cols.insert(2, '% FTE')
     allocation_table = dash_table.DataTable(
         id='allocation-table',
-        columns=[{
-            'name': str(x),
-            'id': str(x),
-            'deletable': False,
-            'editable': False
-            } if x in ['Project', 'User Name', 'Total']
-            else {
-                'name': str(x),
-                'id': str(x),
-                'type': 'numeric',
-                'deletable': False
-                }
-            for x in table_cols],
+        columns=[col_formatter(x) for x in table_cols],
         data=pdf.to_dict('records'),
         editable=True,
         row_deletable=False,
@@ -492,8 +503,8 @@ def total_rows_and_cols(timestamp, rows, columns, semester):
     # calculate Total column 
     for row in rows:
         try: 
-            row['Sem'] = sum([float(val) if key not in ['Project', 'User Name', 'Sem'] and val else 0 for key, val in row.items()])
-            row['% FTE'] = round((row['Sem']/(1211))*100,0)
+            row['Sem'] = sum([float(val) if key not in ['Project', 'User Name', 'Sem', '% FTE'] and val else 0 for key, val in row.items()])
+            row['% FTE'] = row['Sem']/1211
         except:
             row['Sem'] = 0
     
@@ -501,11 +512,11 @@ def total_rows_and_cols(timestamp, rows, columns, semester):
     print(rows)
     if rows[0]['Project'] == 'Total':
         rows[0] = {c['id']: sum([float(row[c['id']]) if c['id'] not in ['Project', 'User Name'] and row[c['id']] and row['Project'] != 'Total' else 0 for row in rows]) for c in columns}
-        rows[1] = {}
+        # rows[1] = {}
     else:
         # insert total row on initial load
         rows.insert(0, {c['id']: sum([float(row[c['id']]) if c['id'] not in ['Project', 'User Name'] and row[c['id']] and row['Project'] != 'Total' else 0 for row in rows]) for c in columns})
-        rows.insert(1, {c['id']: round(rows[0][c['id']]/get_month_fte(c['id'], 2020)*100,0) if c['id'] in sem_months else '' for c in columns})
+        # rows.insert(1, {c['id']: rows[0][c['id']]/get_month_fte(c['id'], 2020) if c['id'] in sem_months else '' for c in columns})
     # update first column to say 'total'
     for row in rows:
         if row['Project'] == 0:

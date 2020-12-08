@@ -13,11 +13,11 @@ Conda environment: utilization-report-2
 *Near term*
 
 - [ ] Add % to My Projects to see time spent relative to MEH
+- [ ] Add compare to planned to see time spent relative to planned (allocation table)
 - [ ] Change date range in My Projects from today's month to last valid date's month
 - [ ] Format hours in Entries table to floats rather than strings
-- [ ] Clear click data when selecting new employee
+- [ ] Clear click data when selecting new employee in Projects chart
 - [ ] Fix employee name store when two or more people are in the app (use session variable in Flask instead of dcc.Store).
-- [ ] Fix projects chart not updating when new dates are selected in drill-down mode.
 - [ ] Add allocation table
   - [x] Add all months to table display
   - [x] Sort months
@@ -40,13 +40,13 @@ Conda environment: utilization-report-2
 - [ ] Record video tutorial for use, create instructions tab with embedded video and
   - [ ] Clarity around how utilization is calculated
   - [ ] Clarity around what goes into utilization
-
 - [ ] Refresh google sheets on page refresh (see [video 2](https://www.youtube.com/watch?v=Mf3s0P4aVKw))
 - [ ] Refactor code based on example (see next up list in OneNote)
 - [ ] loop through Strategy Year to calculate average utilization (check for lag)
 - [x] Ask JS if we want to weight FTE for employee type (standard or part time), now no: leads to very high FTEs for employees who are part time and work full time, seems confusing too and not consistent across utilization and fte
 - [ ] Add allocation table
-- [ ] Build team view
+- [ ] Build portfolio view (utilization)
+- [ ] Build team view (filled area chart bulk effort over time, hours by person h-bar for specified time period)
 
 ##### Deltek Changes to Request
 
@@ -320,7 +320,7 @@ git push heroku master --force
 
 You should now see that your production app reflects the new app.
 
-For the Utilization Report, I needed a fully new directory to start the second version since I was changing to Dash/Plotly from S/Matplotlib. I created a new directory, built the app, deployed to a test heroku app, conducted user testing, then renamed the remote and pushed to production. I maintained the test environment so I could switch back to it if I wanted to do more user testing of new features.
+For the Utilization Report, I needed a fully new directory to start the second version since I was changing to Dash/Plotly from Streamlit/Matplotlib. I created a new directory, built the app, deployed to a test heroku app, conducted user testing, then renamed the remote and pushed to production. I maintained the test environment so I could switch back to it if I wanted to do more user testing of new features.
 
 ## Future Directions
 

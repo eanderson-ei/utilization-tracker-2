@@ -75,11 +75,7 @@ def import_hours():
     
     entries.drop(['First Name', 'Last Name'], axis=1, inplace=True)
     
-    # TODO: move this to compile working hours
-    # reclass unbillable to R&D
     entries['Code'] = entries['User Defined Code 3']
-    filt = entries['Task Name'].str.contains('Unbillable')
-    entries.loc[filt, 'Code'] = 'IRD'
 
     # reclass 'User Defined Code 3' to category
     # TODO: move this to compile_working_hours
