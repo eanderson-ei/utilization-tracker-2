@@ -83,6 +83,11 @@ def import_hours():
     codes = dict(zip(codes_df['User Defined Code 3'], codes_df['Code']))
     entries['Classification'] = entries['Code'].replace(codes)
     
+    # obscure time off type and comments
+    filt = entries['Classification'] == 'Time Off'
+    entries.loc[filt, 'Task Name'] = 'Time Off'
+    entries.loc[filt, 'Comments'] = ''
+    
     # update 'Indirect' Projects to Classification
     filt = entries['Project'] == 'Indirect'
     entries.loc[filt, 'Project'] = entries.loc[filt, 'Classification']
