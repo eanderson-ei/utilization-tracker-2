@@ -68,6 +68,7 @@ def import_hours():
     entries['Entry Month'] = pd.DatetimeIndex(entries['Hours Date']).strftime('%b')
     entries['Entry Year'] = pd.DatetimeIndex(entries['Hours Date']).strftime('%Y')
     
+    print('dates')
     # create username column
     # TODO: move this to compile_working_hours
     # create user name column
@@ -76,8 +77,10 @@ def import_hours():
     entries['User Name'] = entries[['Last Name', 'First Name']].apply(
         lambda x: ', '.join(x), axis=1)
     
+    print('names')
     entries.drop(['First Name', 'Last Name'], axis=1, inplace=True)
     
+    print('codes')
     entries['Code'] = entries['User Defined Code 3']
 
     # reclass 'User Defined Code 3' to category
@@ -86,11 +89,14 @@ def import_hours():
     codes = dict(zip(codes_df['User Defined Code 3'], codes_df['Code']))
     entries['Classification'] = entries['Code'].replace(codes)
     
+    print('obscure')
+    
     # obscure time off type and comments
     filt = entries['Classification'] == 'Time Off'
     entries.loc[filt, 'Task Name'] = 'Time Off'
     entries.loc[filt, 'Comments'] = ''
     
+    print('reclass')
     # update 'Indirect' Projects to Classification
     filt = entries['Project'] == 'Indirect'
     entries.loc[filt, 'Project'] = entries.loc[filt, 'Classification']
