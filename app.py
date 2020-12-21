@@ -6,6 +6,8 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
+print("starting app.py")
+
 external_stylesheets = [dbc.themes.LITERA]  # Also try LITERA, SPACELAB
 
 server = Flask(__name__)
@@ -42,3 +44,5 @@ auth = dash_auth.BasicAuth(
     app,
     VALID_USERNAME_PASSWORD_PAIRS
 )
+
+print("ran app.py")

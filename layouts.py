@@ -17,6 +17,8 @@ from app import app
 ### WEEKLY BAN ###
 ### MONTHLY BURN RATE ###
 
+print('starting layouts.py')
+print('staring hidden divs')
 ### DIV STORES ###
 hours_report = html.Div(id='hours-report', style={'display': 'none'})
 
@@ -27,6 +29,8 @@ valid_thru = dbc.Container(html.Div(id='valid-thru'),
                            style={'fontFamily': 'Gill Sans MT, Arial',
                                   'fontSize': 16,
                                   'textAlign': 'left'})
+
+print('finished hidden divs')
 
 ### INTERVAL ###
 # interval = dcc.Interval(id='interval_pg', interval=86400000*7, n_intervals=0)  # activated once per week or on refresh

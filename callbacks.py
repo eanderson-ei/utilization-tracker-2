@@ -19,6 +19,8 @@ from layouts import table_filter, semester_filter  # NEEDED?
 
 from app import app  #, db  #uncomment for dev
 
+print('starting callbacks.py')
+
 sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
                 'Jan', 'Feb', 'Mar']
 
@@ -31,12 +33,14 @@ def get_month_fte(month, year):
     days = np.busday_count(start_date, end_date)
     hours = days * 8
     return hours
-    
+
+print ('starting data load')
 # Load data 
 hours_report, hours_entries = functions.import_hours()
 # df = functions.read_table('planned_hrs', db.engine)  # uncomment for dev
-allocation_df = functions.build_allocation_table(df)
+# allocation_df = functions.build_allocation_table(df)
 
+print('finished data load')
 # calculate DT, semester and strategy year helper columns
 
 # month_entries = functions.get_month_entries(hours_entries)
