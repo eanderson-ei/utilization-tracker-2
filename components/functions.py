@@ -47,16 +47,19 @@ def load_report(client, spreadsheet, sheet_title):
 
 def import_hours():
     client = auth_gspread()
+    print('loading utilization hours new')
     df = load_report(client, 'Utilization-Hours', 'Utilization-Hours-2')
     
     # set dtypes
     df['DT'] = pd.to_datetime(df['DT'])
     
+    print('laoding loading utilization hours old')
     # get entries
     entries1 = load_report(client, 'Utilization-Hours', 'june-mar-2020')    
     entries2 = load_report(client, 'Utilization-Hours', 'apr-may-2020')
     entries = pd.concat([entries1, entries2])
     
+    print('formatting and joining')
     # format dtypes
     entries['Hours Date'] = pd.to_datetime(entries['Hours Date'])
     
@@ -91,6 +94,8 @@ def import_hours():
     # update 'Indirect' Projects to Classification
     filt = entries['Project'] == 'Indirect'
     entries.loc[filt, 'Project'] = entries.loc[filt, 'Classification']
+    
+    print('returning data')
     
     return df, entries
 
