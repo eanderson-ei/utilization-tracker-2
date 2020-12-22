@@ -125,31 +125,16 @@ def all_hours(client):
     print('Combining and formatting data')
     df = pd.concat([df2019, df2020_1, df2020_2])
     
-    # create month and year convenience columns
-    df['Entry Month'] = pd.DatetimeIndex(df['Hours Date']).strftime('%b')
-    df['Entry Year'] = pd.DatetimeIndex(df['Hours Date']).strftime('%Y')
-    
     # set dtypes
     df['Hours Date'] = pd.to_datetime(df['Hours Date'])
     df['Entered Hours'] = pd.to_numeric(df['Entered Hours'])
     df['Approved Hours'] = pd.to_numeric(df['Approved Hours'])
     df['Entry Year'] = pd.to_numeric(df['Entry Year'])
     
-    # create user name column
-    df['First Name'] = df['First Name'].str.strip()  # remove whitespace before Replicon first names
-    df['Last Name'] = df['Last Name'].str.strip()
-    df['User Name'] = df[['Last Name', 'First Name']].apply(
-        lambda x: ', '.join(x), axis=1)
-    
     # reclass unbillable to R&D
-    df['Code'] = df['User Defined Code 3']
-    filt = df['Task Name'].str.contains('Unbillable')
-    df.loc[filt, 'Code'] = 'IRD'
-    
-    # reclass 'User Defined Code 3' to category
-    codes_df = load_report(client, 'Utilization-Inputs', 'CODES')
-    codes = dict(zip(codes_df['User Defined Code 3'], codes_df['Code']))
-    df['Classification'] = df['Code'].replace(codes)
+    filt = df['Task Name'].str.contains('Unbillable', na=False)
+    df.to_csv('data/debug.csv')
+    df.loc[filt, 'Classification'] = 'R&D'
     
     return df
 
@@ -390,6 +375,29 @@ def compile_hours():
     in_df = pd.read_csv(utilization_in, sep='\t', 
                         encoding='utf_16_le')
     
+    # create month and year convenience columns
+    in_df['Entry Month'] = pd.DatetimeIndex(in_df['Hours Date']).strftime('%b')
+    in_df['Entry Year'] = pd.DatetimeIndex(in_df['Hours Date']).strftime('%Y')
+    
+    # create user name column
+    in_df['First Name'] = in_df['First Name'].str.strip()  # remove whitespace before Replicon first names
+    in_df['Last Name'] = in_df['Last Name'].str.strip()
+    in_df['User Name'] = in_df[['Last Name', 'First Name']].apply(
+        lambda x: ', '.join(x), axis=1)
+
+    in_df.drop(['First Name', 'Last Name'], axis=1, inplace=True)
+    
+    # reclass 'User Defined Code 3' to category
+    in_df['Code'] = in_df['User Defined Code 3']
+    
+    codes_df = load_report(client, 'Utilization-Inputs', 'CODES')
+    codes = dict(zip(codes_df['User Defined Code 3'], codes_df['Code']))
+    in_df['Classification'] = in_df['Code'].replace(codes)
+    
+    in_df.drop('Code', axis=1, inplace=True)
+    
+    print('Length of in_df is ' + str(len(in_df)))
+    
     # read latest projects report
     projects_in = get_latest_file(downloads, projects_file)
     p_df = pd.read_csv(projects_in, sep='\t', 
@@ -397,6 +405,12 @@ def compile_hours():
     
     # join utilization to projects
     jun_mar_2021 = join_projects(in_df, p_df)
+    
+    print('Length of jun_mar_2021 is ' + str(len(jun_mar_2021)))
+    
+    # update 'Indirect' Projects to Classification
+    filt = jun_mar_2021['Project'] == 'Indirect'
+    jun_mar_2021.loc[filt, 'Project'] = jun_mar_2021.loc[filt, 'Classification']
       
     # save report to 'june-mar-2020'
     sh = client.open('Utilization-Hours')

@@ -63,43 +63,15 @@ def import_hours():
     # format dtypes
     entries['Hours Date'] = pd.to_datetime(entries['Hours Date'])
     
-    # create month and year convenience columns
-    #TODO: move to compile_working_hours
-    entries['Entry Month'] = pd.DatetimeIndex(entries['Hours Date']).strftime('%b')
-    entries['Entry Year'] = pd.DatetimeIndex(entries['Hours Date']).strftime('%Y')
-    
-    print('dates')
-    # create username column
-    # TODO: move this to compile_working_hours
-    # create user name column
-    entries['First Name'] = entries['First Name'].str.strip()  # remove whitespace before Replicon first names
-    entries['Last Name'] = entries['Last Name'].str.strip()
-    entries['User Name'] = entries[['Last Name', 'First Name']].apply(
-        lambda x: ', '.join(x), axis=1)
-    
-    print('names')
-    entries.drop(['First Name', 'Last Name'], axis=1, inplace=True)
-    
-    print('codes')
-    entries['Code'] = entries['User Defined Code 3']
+    # reclass unbillable to R&D
+    filt = df['Task Name'].str.contains('Unbillable', na=False)
+    df.to_csv('data/debug.csv')
+    df.loc[filt, 'Classification'] = 'R&D'
 
-    # reclass 'User Defined Code 3' to category
-    # TODO: move this to compile_working_hours
-    codes_df = load_report(client, 'Utilization-Inputs', 'CODES')
-    codes = dict(zip(codes_df['User Defined Code 3'], codes_df['Code']))
-    entries['Classification'] = entries['Code'].replace(codes)
-    
-    print('obscure')
-    
     # obscure time off type and comments
     filt = entries['Classification'] == 'Time Off'
     entries.loc[filt, 'Task Name'] = 'Time Off'
     entries.loc[filt, 'Comments'] = ''
-    
-    print('reclass')
-    # update 'Indirect' Projects to Classification
-    filt = entries['Project'] == 'Indirect'
-    entries.loc[filt, 'Project'] = entries.loc[filt, 'Classification']
     
     print('returning data')
     
