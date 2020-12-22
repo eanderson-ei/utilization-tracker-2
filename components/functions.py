@@ -53,7 +53,7 @@ def import_hours():
     # set dtypes
     df['DT'] = pd.to_datetime(df['DT'])
     
-    print('laoding loading utilization hours old')
+    print('loading utilization hours old')
     # get entries
     entries1 = load_report(client, 'Utilization-Hours', 'june-mar-2020')    
     entries2 = load_report(client, 'Utilization-Hours', 'apr-may-2020')
