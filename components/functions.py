@@ -64,9 +64,8 @@ def import_hours():
     entries['Hours Date'] = pd.to_datetime(entries['Hours Date'])
     
     # reclass unbillable to R&D
-    filt = df['Task Name'].str.contains('Unbillable', na=False)
-    df.to_csv('data/debug.csv')
-    df.loc[filt, 'Classification'] = 'R&D'
+    filt = entries['Task Name'].str.contains('Unbillable', na=False)
+    entries.loc[filt, 'Classification'] = 'R&D'
 
     # obscure time off type and comments
     filt = entries['Classification'] == 'Time Off'
