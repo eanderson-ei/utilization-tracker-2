@@ -14,31 +14,22 @@ import re  # used to regex date picker range output
 
 from components import functions
 from components import visualizations
+from components.table_highlights import discrete_background_color_bins
 
 from layouts import table_filter, semester_filter  # NEEDED?
 
-from app import app  #, db  #uncomment for dev
+from app import app, db  #uncomment for dev
 
 print('starting callbacks.py')
 
 sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
                 'Jan', 'Feb', 'Mar']
 
-def get_month_fte(month, year):
-    """returns fte hours given any month and year"""
-    year_months = sem_months[9:] + sem_months[:9]
-    month_idx = year_months.index(month)
-    start_date = date(year, month_idx, 1)
-    end_date = date(year, month_idx+1, 1)
-    days = np.busday_count(start_date, end_date)
-    hours = days * 8
-    return hours
-
 print ('starting data load')
 # Load data 
 hours_report, hours_entries = functions.import_hours()
-# df = functions.read_table('planned_hrs', db.engine)  # uncomment for dev
-# allocation_df = functions.build_allocation_table(df)
+df = functions.read_table('planned_hrs', db.engine)  # uncomment for dev
+allocation_df = functions.build_allocation_table(df)
 
 print('finished data load')
 # calculate DT, semester and strategy year helper columns
@@ -107,7 +98,7 @@ def update_utilization_chart(name, predict_input, n_clicks):
     return fig
 
 
-### UPDATE PROJECTS CHART
+### UPDATE PROJECTS CHART ###
 @app.callback(
     Output('projects-chart', 'figure'),
     [Input('select-name', 'value'),
@@ -238,55 +229,71 @@ def clear_clickData(n_clicks):
         return None
 
 
-# update valid thru
+def _get_last_valid_date(name):
+    """returns last valid date as datetime"""
+    filt = ((hours_entries['User Name'] == name) 
+            & (hours_entries['Hours Date'] <= dt.today()))
+    current_hours = hours_entries.loc[filt, 'Hours Date']
+    max_DT = current_hours.max()
+    return max_DT
+
+
+# UPDATE VALID THROUGH TEXT ###
 @app.callback(
     Output('valid-thru', 'children'),
     [Input('select-name', 'value')]
 )
 def get_valid_thru(name):
-    filt = ((hours_entries['User Name'] == name) 
-            & (hours_entries['Hours Date'] <= dt.today()))
-    current_hours = hours_entries.loc[filt, 'Hours Date']
-    max_DT = current_hours.max()
+    max_DT = _get_last_valid_date(name)
     max_DT_s = max_DT.strftime('%A, %B %e, %Y')
     text = f'Data valid through: {max_DT_s}'
-    print(text)
     return text
 
 
-# # update tab layouts
-# @app.callback(Output('tabs-content', 'children'),
-#               [Input('tabs', 'active_tab')])
-# def render_content(tab):
-#     # TODO: update dropdown value and options
-#     if tab == 'by-person':
-#         return html.Div([
-#             html.H3('Tab content 1'),
-#             # dbc.Row(
-#             #     [
-#             #         dbc.Col(table_filter, width=6),
-#             #         dbc.Col(semester_filter, width=6)
-#             #     ]
-#             # ),
-#             html.Br()
-#         ])
-#     elif tab == 'by-project':
-#         return html.Div([
-#             html.H3('Tab content 2'),
-#             # dbc.Row(
-#             #     [
-#             #         dbc.Col(table_filter, width=6),
-#             #         dbc.Col(semester_filter, width=6)
-#             #     ]
-#             # ),
-#             html.Br()
-#         ])
-#     elif tab == 'by-month':
-#         return html.Div([
-#             html.H3('Tab content 3'),
-#             # table_filter,
-#             html.Br()
-#         ])
+### SET DATE PICKER END DATE ###
+@app.callback(
+    Output('date-picker-range', 'end_date'),
+           [Input('select-name', 'value')]
+)
+def update_end_date(name):
+    max_DT = _get_last_valid_date(name)
+    max_DT_s = max_DT.strftime('%Y-%m-%d')
+    return max_DT_s    
+
+
+### UPDATE ALLOCATION TAB LAYOUTS ###
+@app.callback(Output('tabs-content', 'children'),
+              [Input('tabs', 'active_tab')])
+def render_content(tab):
+    # TODO: update dropdown value and options
+    if tab == 'by-person':
+        return html.Div([
+            html.H3('Tab content 1'),
+            # dbc.Row(
+            #     [
+            #         dbc.Col(table_filter, width=6),
+            #         dbc.Col(semester_filter, width=6)
+            #     ]
+            # ),
+            html.Br()
+        ])
+    elif tab == 'by-project':
+        return html.Div([
+            html.H3('Tab content 2'),
+            # dbc.Row(
+            #     [
+            #         dbc.Col(table_filter, width=6),
+            #         dbc.Col(semester_filter, width=6)
+            #     ]
+            # ),
+            html.Br()
+        ])
+    elif tab == 'by-month':
+        return html.Div([
+            html.H3('Tab content 3'),
+            # table_filter,
+            html.Br()
+        ])
 
 # update table filter
 @app.callback(
@@ -364,17 +371,16 @@ def populate_semester_filter(active_tab):
 def populate_table(active_tab, table_filter, semester):
     # helper function for column formatting
     def col_formatter(col):
-        print('formatting')
         col_format = {
             'name': str(col),
             'id': str(col),
             'deletable': False,
             'editable': True
             }
-        if col in ['Project', 'User Name', 'Total']:
+        if col in ['Project', 'User Name', 'Total', 'Sem']:
             col_format['editable'] = False
         elif col in ['% FTE']:
-            print('found FTE')
+            col_format['editable'] = False
             col_format['type'] = 'numeric'
             col_format['format'] = FormatTemplate.percentage(0)
         else:
@@ -443,6 +449,7 @@ def populate_table(active_tab, table_filter, semester):
     table_cols = pdf.columns.to_list()
     table_cols.insert(1, 'Sem')
     table_cols.insert(2, '% FTE')
+    (styles, legend) = discrete_background_color_bins(pdf, columns=sem_months)
     allocation_table = dash_table.DataTable(
         id='allocation-table',
         columns=[col_formatter(x) for x in table_cols],
@@ -468,10 +475,7 @@ def populate_table(active_tab, table_filter, semester):
                 'minWidth': '180px', 'width': '180px', 'maxWidth': '18s0px' 
             } for c in ['User Name', 'Project']
         ],
-        style_data_conditional=[
-            {'if': {'row_index': 'odd'},
-            'backgroundColor': 'rgb(248, 248, 248)'}
-        ],
+        style_data_conditional=styles,        
         style_header={
                 'backgroundColor': 'white',
                 'fontWeight': 'bold'
@@ -503,8 +507,11 @@ def populate_table(active_tab, table_filter, semester):
 )
 def total_rows_and_cols(timestamp, rows, columns, semester):
     # get year
-    sy = semester.split('|')[1].strip() 
+    sy = semester.split('|')[1].strip()
+    cols = [column['name'] for column in columns]
+    col = [col for col in cols if col in ['Project', 'User Name']][0]
     # calculate Total column 
+    # TODO: calculate total hours per semester
     for row in rows:
         try: 
             row['Sem'] = sum([float(val) if key not in ['Project', 'User Name', 'Sem', '% FTE'] and val else 0 for key, val in row.items()])
@@ -513,18 +520,27 @@ def total_rows_and_cols(timestamp, rows, columns, semester):
             row['Sem'] = 0
     
     # calculate Total row
-    print(rows)
-    if rows[0]['Project'] == 'Total':
-        rows[0] = {c['id']: sum([float(row[c['id']]) if c['id'] not in ['Project', 'User Name'] and row[c['id']] and row['Project'] != 'Total' else 0 for row in rows]) for c in columns}
+    if rows[0][col] == 'Total':
+        rows[0] = {c['id']: sum([float(row[c['id']]) if c['id'] not in ['Project', 'User Name'] and row[c['id']] and row[col] != 'Total' else 0 for row in rows]) for c in columns}
         # rows[1] = {}
     else:
         # insert total row on initial load
-        rows.insert(0, {c['id']: sum([float(row[c['id']]) if c['id'] not in ['Project', 'User Name'] and row[c['id']] and row['Project'] != 'Total' else 0 for row in rows]) for c in columns})
+        rows.insert(0, {c['id']: sum([float(row[c['id']]) if c['id'] not in ['Project', 'User Name'] and row[c['id']] and row[col] != 'Total' else 0 for row in rows]) for c in columns})
         # rows.insert(1, {c['id']: rows[0][c['id']]/get_month_fte(c['id'], 2020) if c['id'] in sem_months else '' for c in columns})
     # update first column to say 'total'
     for row in rows:
-        if row['Project'] == 0:
-            row['Project'] = 'Total'
-    
+        if row[col] == 0:
+            row[col] = 'Total'
+                
     return rows
 
+
+# @app.callback(
+#     Output('allocation-table', 'style_data_conditional'),
+#     [Input('allocation-table', 'derived_virtual_data')],
+#     [State('allocation-table', 'data')]
+# )
+# def style_allocation_table(timestamp, data):
+#     df = pd.DataFrame(data)
+#     (styles, legend) = discrete_background_color_bins(df)
+    # return styles

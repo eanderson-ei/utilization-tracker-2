@@ -2,7 +2,8 @@
 
 import pygsheets
 import pandas as pd
-
+from datetime import date
+import numpy as np
 
 sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
                 'Jan', 'Feb', 'Mar']
@@ -10,6 +11,17 @@ year_helper = [0] * 9 + [1] * 3
 #TODO: calculate this rather than hard-code
 meh = [176, 168, 176, 184, 168, 176, 176, 168, 184,
        168, 160, 184]
+
+
+def get_month_fte(month, year):
+    """returns fte hours given any month and year"""
+    year_months = sem_months[9:] + sem_months[:9]
+    month_idx = year_months.index(month)
+    start_date = date(year, month_idx, 1)
+    end_date = date(year, month_idx+1, 1)
+    days = np.busday_count(start_date, end_date)
+    hours = days * 8
+    return hours
 
 
 def auth_gspread():

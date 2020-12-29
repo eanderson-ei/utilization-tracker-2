@@ -43,7 +43,7 @@ LOGO = app.get_asset_url('ei-logo-white.png')
 nav_items = dbc.Container([
     dbc.NavItem(dbc.NavLink('My Utilization', href='/')),
     dbc.NavItem(dbc.NavLink('My Projects', href='/my_projects')),
-    # dbc.NavItem(dbc.NavLink('Allocation', href='/allocation'))  # turn on for dev
+    dbc.NavItem(dbc.NavLink('Allocation', href='/allocation'))  # turn on for dev
 ]
 )
 
@@ -301,7 +301,7 @@ instruction_text = [
 date_picker = dcc.DatePickerRange(
                 id='date-picker-range',
                 start_date=dt.today().strftime('%Y-%m-01'),
-                min_date_allowed='2019-04-01',
+                min_date_allowed='2020-04-01',
                 end_date=dt.today().strftime('%Y-%m-%d'),
                 number_of_months_shown=2,
                 persistence=True,
@@ -363,13 +363,13 @@ projects_layout = html.Div([
 
 
 ### Allocation layout
-# tabs = dcc.Tabs(id='tabs', value='tab-1', children=[
-#     dcc.Tab(label='by Person', value='by-person'),
-#     dcc.Tab(label='by Project', value='by-project'),
-#     dcc.Tab(label='by Month', value='by-month')
-# ])
+tabs = dcc.Tabs(id='tabs', value='tab-1', children=[
+    dcc.Tab(label='by Person', value='by-person'),
+    dcc.Tab(label='by Project', value='by-project'),
+    dcc.Tab(label='by Month', value='by-month')
+])
 
-# tab_content = html.Div(id='tab-content')
+tab_content = html.Div(id='tab-content')
 
 tabs = html.Div(
     [
@@ -377,7 +377,7 @@ tabs = html.Div(
             [
                 dbc.Tab(label='by Person', tab_id='by-person'),
                 dbc.Tab(label='by Project', tab_id='by-project'),
-                dbc.Tab(label='by Month', tab_id='by-month'),
+                # dbc.Tab(label='by Month', tab_id='by-month'),
             ],
             id='tabs',
             active_tab='by-person',
@@ -403,28 +403,28 @@ semester_filter = dcc.Dropdown(
 )
 
 
-# allocation_table = dash_table.DataTable(
-#         id='allocation-table',
-#         columns=[{'name': 'Name', 'id': 'Name', 'editable': False, 'deletable': False, 'renamable': False},
-#                  {'name': 'Project A', 'id': 'Project A', 'deletable': False, 'renamable': False},
-#                  {'name': 'Project B', 'id': 'Project B', 'deletable': False, 'renamable': False}],
-#         data=[{'Name': 'Erik', 'Project A': .5, 'Project B': .5, 'Project C': .5},
-#               {'Name': 'Kristen', 'Project A': .5, 'Project B': .5}],
-#         editable=True,
-#         row_deletable=False,
-#         sort_action="native",
-#         sort_mode="single",
-#         filter_action="native",
-#         page_action='none',
-#         style_table={'overflowY': 'auto', 'overflowX': 'scroll'},
-#         style_cell={'textAlign': 'center', 'maxWidth': '100px'},
-#         style_cell_conditional=[
-#             {
-#                 'if': {'column_id': c},
-#                 'textAlign': 'right'
-#             } for c in ['Name']
-#         ]
-#     )
+allocation_table = dash_table.DataTable(
+        id='allocation-table',
+        columns=[{'name': 'Name', 'id': 'Name', 'editable': False, 'deletable': False, 'renamable': False},
+                 {'name': 'Project A', 'id': 'Project A', 'deletable': False, 'renamable': False},
+                 {'name': 'Project B', 'id': 'Project B', 'deletable': False, 'renamable': False}],
+        data=[{'Name': 'Erik', 'Project A': .5, 'Project B': .5, 'Project C': .5},
+              {'Name': 'Kristen', 'Project A': .5, 'Project B': .5}],
+        editable=True,
+        row_deletable=False,
+        sort_action="native",
+        sort_mode="single",
+        filter_action="native",
+        page_action='none',
+        style_table={'overflowY': 'auto', 'overflowX': 'scroll'},
+        style_cell={'textAlign': 'center', 'maxWidth': '100px'},
+        style_cell_conditional=[
+            {
+                'if': {'column_id': c},
+                'textAlign': 'right'
+            } for c in ['Name']
+        ]
+    )
 
 filters = dbc.Row(
                 [

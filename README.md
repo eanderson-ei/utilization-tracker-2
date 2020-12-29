@@ -14,8 +14,8 @@ Conda environment: utilization-report-2
 
 - [ ] Add % to My Projects to see time spent relative to MEH
 - [ ] Add compare to planned to see time spent relative to planned (allocation table)
-- [ ] Change date range in My Projects from today's month to last valid date's month
-- [ ] Format hours in Entries table to floats rather than strings
+- [x] Change date range in My Projects from today's month to last valid date's month
+- [x] Format hours in Entries table to floats rather than strings
 - [ ] Clear click data when selecting new employee in Projects chart
 - [ ] Fix employee name store when two or more people are in the app (use session variable in Flask instead of dcc.Store).
 - [ ] Add allocation table
@@ -33,7 +33,8 @@ Conda environment: utilization-report-2
   - [ ] Add Util sum row (by-person)
   - [ ] Add total row (by-project)
   - [ ] Connect to my projects
-- [ ] Set calendar min to April 2020
+  - [ ] fix total column 'Project' key error
+- [x] Set calendar min to April 2020
 
 *Long term*
 
