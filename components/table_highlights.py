@@ -3,19 +3,22 @@
 
 import dash_html_components as html
 import colorlover
-from components.functions import get_month_fte
+from components.functions import get_month_fte, sem_months, year_helper, decalc_allocation_data
 import numpy as np
 
-def discrete_background_color_bins(df, n_bins=5, columns='all'):
+
+def discrete_background_color_bins(df, semester, n_bins=5):
+    col = [col for col in df.columns if col in ['Project', 'User Name']][0]
+    filt = df[col] != 'Total'
+    dff = df.loc[filt]
+    df_numeric_columns = dff[[month for month in dff.columns if month in sem_months]]
+    
+    sy = semester.split('|')[1].strip()
+    base_year = int(sy[:4])
+    sem_years = [base_year + helper for helper in year_helper]
+    
     bounds = [i * (1.0 / n_bins) for i in range(n_bins + 1)]
-    if columns == 'all':
-        if 'id' in df:
-            df_numeric_columns = df.select_dtypes('number').drop(['id'], axis=1)
-        else:
-            df_numeric_columns = df.select_dtypes('number')
-    else:
-        df_numeric_columns = df[[col for col in columns if col in df.columns]]
-    print(df_numeric_columns)
+    
     df_max = df_numeric_columns.max().max()
     df_min = df_numeric_columns.min().min()
     ranges = [
@@ -59,25 +62,15 @@ def discrete_background_color_bins(df, n_bins=5, columns='all'):
         # )
     
     # conditional format total row
-    col = [col for col in df.columns if col in ['Project', 'User Name']][0]
+    
     # don't conditional format for Project view
     if col == 'Project':
         for column in df_numeric_columns:
-            fte_hours = get_month_fte(column, 2020)
-            fte_bounds = [x * fte_hours for x in [1, 1.1, 1.2]]
-            colors = ['#02b875', '#f0ad4e', '#d9534f']
-            
-            # override project-scale conditional formatting
-            styles.append(
-                    {'if':{
-                            'filter_query': (
-                                '{{{col}}} = Total && {{{column}}} < {fte_hours}'
-                            ).format(col=col, column=column, fte_hours=fte_hours),
-                            'column_id': column
-                        },
-                        'backgroundColor': 'white',
-                        'color': 'black'}
-                )
+            month_idx = sem_months.index(column)
+            year = sem_years[month_idx]        
+            fte_hours = get_month_fte(column, year)
+            fte_bounds = [x * fte_hours for x in [0, 1, 1.1, 1.2]]
+            colors = ['#fff', '#02b875', '#f0ad4e', '#d9534f']
             
             # apply conditional formatting for total row
             for bound, backgroundColor in zip(fte_bounds, colors):
@@ -96,11 +89,11 @@ def discrete_background_color_bins(df, n_bins=5, columns='all'):
         vals = df_numeric_columns.sum(axis=0)
         bin_max = vals.max()
         bin_min = vals.min()
-        val_bounds = np.linspace(bin_min, bin_max, 5)
+        val_bounds = np.linspace(bin_min, bin_max, n_bins)
         for column in df_numeric_columns:
             for idx, bound in enumerate(val_bounds):
-                backgroundColor = colorlover.scales[str(5)]['seq']['Greens'][idx]
-                color = 'white' if idx > 5/2. else 'inherit'
+                backgroundColor = colorlover.scales[str(n_bins)]['seq']['Greens'][idx]
+                color = 'white' if idx > n_bins/2. else 'inherit'
                 styles.append(
                     {'if':{
                             'filter_query': (

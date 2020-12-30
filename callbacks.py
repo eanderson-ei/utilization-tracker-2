@@ -4,6 +4,7 @@ import dash_html_components as html
 import dash_table
 import dash_table.FormatTemplate as FormatTemplate
 import dash_bootstrap_components as dbc
+from dash import callback_context
 from flask import request
 import json
 from datetime import datetime as dt
@@ -28,8 +29,8 @@ sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
 print ('starting data load')
 # Load data 
 hours_report, hours_entries = functions.import_hours()
-df = functions.read_table('planned_hrs', db.engine)  # uncomment for dev
-allocation_df = functions.build_allocation_table(df)
+planned_hours = functions.read_table('planned_hrs', db.engine)  # uncomment for dev
+allocation_df = functions.build_allocation_table(planned_hours)
 
 print('finished data load')
 # calculate DT, semester and strategy year helper columns
@@ -410,7 +411,7 @@ def populate_table(active_tab, table_filter, semester):
             if column not in pdf.columns:
                 pdf[column] = None
         pdf = pdf[columns]
-        pdf.reset_index(inplace=True)         
+        pdf.reset_index(inplace=True)    
             
     elif active_tab == 'by-project':
         s = semester.split('|')[0].strip()
@@ -449,7 +450,7 @@ def populate_table(active_tab, table_filter, semester):
     table_cols = pdf.columns.to_list()
     table_cols.insert(1, 'Sem')
     table_cols.insert(2, '% FTE')
-    (styles, legend) = discrete_background_color_bins(pdf, columns=sem_months)
+    (styles, legend) = discrete_background_color_bins(pdf, semester)
     allocation_table = dash_table.DataTable(
         id='allocation-table',
         columns=[col_formatter(x) for x in table_cols],
@@ -492,6 +493,7 @@ def populate_table(active_tab, table_filter, semester):
         fixed_columns={'headers': True, 'data': 1},
         fixed_rows = {'headers': True},
     )
+    
     if pdf.empty:
         return "No time allocations available"
     else:
@@ -506,16 +508,18 @@ def populate_table(active_tab, table_filter, semester):
      State('semester-filter', 'value')]
 )
 def total_rows_and_cols(timestamp, rows, columns, semester):
-    # get year
+    # get semester and year
+    sem = semester.split('|')[0].strip()
     sy = semester.split('|')[1].strip()
+    sem_fte = functions.get_sem_fte(sem, sy)
+    
     cols = [column['name'] for column in columns]
     col = [col for col in cols if col in ['Project', 'User Name']][0]
     # calculate Total column 
-    # TODO: calculate total hours per semester
     for row in rows:
         try: 
             row['Sem'] = sum([float(val) if key not in ['Project', 'User Name', 'Sem', '% FTE'] and val else 0 for key, val in row.items()])
-            row['% FTE'] = row['Sem']/1211
+            row['% FTE'] = row['Sem']/sem_fte
         except:
             row['Sem'] = 0
     
@@ -535,12 +539,46 @@ def total_rows_and_cols(timestamp, rows, columns, semester):
     return rows
 
 
-# @app.callback(
-#     Output('allocation-table', 'style_data_conditional'),
-#     [Input('allocation-table', 'derived_virtual_data')],
-#     [State('allocation-table', 'data')]
-# )
-# def style_allocation_table(timestamp, data):
-#     df = pd.DataFrame(data)
-#     (styles, legend) = discrete_background_color_bins(df)
-    # return styles
+@app.callback(
+    Output('allocation-table', 'style_data_conditional'),
+    [Input('allocation-table', 'derived_virtual_data')],
+    [State('allocation-table', 'data'),
+     State('semester-filter', 'value')]
+)
+def style_allocation_table(timestamp, data, semester):
+    df = functions.decalc_allocation_data(data)
+    (styles, legend) = discrete_background_color_bins(df, semester)
+    return styles
+
+    
+@app.callback(
+    Output('allocation-table', 'is_focused'),  # output must not exist before creating allocation table
+    [Input('save-plan', 'n_clicks')],
+    [State('allocation-table', 'derived_virtual_data'),
+     State('semester-filter', 'value'),
+     State('table-filter', 'value')]
+)
+def save_to_postgres(n_clicks, data, semester, table_filter):
+    if n_clicks is None:
+        raise PreventUpdate
+    else:
+        ctx = callback_context
+        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+        
+        df = functions.decalc_allocation_data(data)
+        col = [col for col in df.columns if col in ['Project', 'User Name']][0]
+        df = df.melt(id_vars=col, var_name='Entry Month', value_name='Hours')
+        
+        sem = semester.split('|')[0].strip()
+        sy = semester.split('|')[1].strip()
+        base_year = int(sy[:4])
+        
+        sem_years = [base_year + helper for helper in functions.year_helper]
+        df['Entry Year'] = df['Entry Month'].apply(lambda x: sem_years[functions.sem_months.index(x)])
+        
+        if button_id == 'save-plan':
+            df['User Name'] = table_filter
+                
+        print(df)
+        
+    

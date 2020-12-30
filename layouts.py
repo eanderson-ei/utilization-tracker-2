@@ -408,8 +408,6 @@ allocation_table = dash_table.DataTable(
         columns=[{'name': 'Name', 'id': 'Name', 'editable': False, 'deletable': False, 'renamable': False},
                  {'name': 'Project A', 'id': 'Project A', 'deletable': False, 'renamable': False},
                  {'name': 'Project B', 'id': 'Project B', 'deletable': False, 'renamable': False}],
-        data=[{'Name': 'Erik', 'Project A': .5, 'Project B': .5, 'Project C': .5},
-              {'Name': 'Kristen', 'Project A': .5, 'Project B': .5}],
         editable=True,
         row_deletable=False,
         sort_action="native",
@@ -439,7 +437,7 @@ allocation_div = html.Div(id='allocation-div')
 
 add = dbc.Button(children="Add Project", color='success', size='md', 
                  outline=True, className='mr-1', style={'border-radius': '3px'})
-save = dbc.Button("Save Changes", color='success', size='md', className='mr-1',
+save = dbc.Button(id='save-plan', children="Save Changes", color='success', size='md', className='mr-1',
                   style={'border-radius': '3px'})
 clear = dbc.Button("Reset", color='danger', outline=True, size='sm', 
                    className='mr-1', style={'border-radius': '3px'})
@@ -465,7 +463,8 @@ allocation_layout = html.Div([
                 ], style={'margin-top': 10}
             )
         ]
-    )
+    ),
+    dcc.Store(id='data-store')
 ])
 
 

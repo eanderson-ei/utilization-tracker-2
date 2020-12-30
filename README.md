@@ -24,10 +24,12 @@ Conda environment: utilization-report-2
   - [x] Disallow editing of projects
   - [x] Right align projects, users
   - [x] Increase width of above to 2x
-  - [ ] add conditional formatting to cells
-  - [ ] highlight current month
-  - [ ] Wire save button
+  - [x] add conditional formatting to cells
+  - [ ] wire semester year rather than hard code
+  - [ ] wire total for semester rather than hard code
+  - [ ] write script for updating from Scoreboard
   - [ ] Change Add Project button text based on active_tab
+  - [ ] Wire save button
   - [ ] Wire Add Project button
   - [ ] Add FTE sum row (by-person)
   - [ ] Add Util sum row (by-person)
@@ -35,6 +37,7 @@ Conda environment: utilization-report-2
   - [ ] Connect to my projects
   - [ ] fix total column 'Project' key error
 - [x] Set calendar min to April 2020
+- [ ] Export Time Entries
 
 *Long term*
 
@@ -116,6 +119,21 @@ Conda environment: utilization-report-2
 2. Push changes heroku:
 
    `git push heroku master`
+
+#### To update scoreboard database
+
+1. Find the Scoreboard on SharePoint and open in Desktop app
+2. Ensure that all names are correct and all project codes are populated 
+3. Save to `data/` as `.xls` file
+4. Open scripts/read_scoreboard.csv and update `tabs` variable
+5. Run scripts/read_scoreboard.csv
+6. Open pgAdmin
+7. Find database in heroku_pg (search 'd7hk...')
+8. Use the Query editor to delete all records (`DELETE from planned_hrs`) if overwritting
+9. Right click on table 'planned_hrs'
+10. Select 'Import'
+11. Provide filename, format = csv, encoding = utf-8, OID = False, Header = True, Delimeter = ','
+12. You will see a Successfully Completed message in the bottom right of your screen
 
 
 

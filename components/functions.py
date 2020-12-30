@@ -7,6 +7,7 @@ import numpy as np
 
 sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
                 'Jan', 'Feb', 'Mar']
+cutoff = 7
 year_helper = [0] * 9 + [1] * 3
 #TODO: calculate this rather than hard-code
 meh = [176, 168, 176, 184, 168, 176, 176, 168, 184,
@@ -14,14 +15,39 @@ meh = [176, 168, 176, 184, 168, 176, 176, 168, 184,
 
 
 def get_month_fte(month, year):
-    """returns fte hours given any month and year"""
+    """returns fte hours given any month ('MMM') and year ('YYYY')"""
     year_months = sem_months[9:] + sem_months[:9]
-    month_idx = year_months.index(month)
+    month_idx = year_months.index(month) + 1  # date is 1 indexed
     start_date = date(year, month_idx, 1)
-    end_date = date(year, month_idx+1, 1)
+    if month_idx == 12:
+        end_month = 1
+        end_year = year + 1
+    else:
+        end_month = month_idx + 1
+        end_year = year
+    end_date = date(end_year, end_month, 1)
     days = np.busday_count(start_date, end_date)
     hours = days * 8
     return hours
+
+
+def get_sem_fte(sem, year):
+    """returns semester fte for any semester ('Sem X') and year ('XXXX-XXXX')"""
+    base_year = int(year[:4])
+    sem_years = [base_year + helper for helper in year_helper]
+    if sem == 'Sem 1':
+        months = sem_months[:cutoff]
+        years = sem_years[:cutoff]
+    elif sem == 'Sem 2':
+        months = sem_months[cutoff:]
+        years = sem_years[cutoff:]
+    else:
+        print('Incorrect input string to functions.get_sem_fte')
+    sem_fte = 0
+    for month, year in zip(months, years):
+        month_fte = get_month_fte(month, year)
+        sem_fte += month_fte
+    return sem_fte
 
 
 def auth_gspread():
@@ -246,4 +272,25 @@ def build_allocation_table(df):
         df.loc[filt, 'Semester'] = df.loc[filt, :].apply(semester, axis=1)
         
     return df    
+
+
+
+def decalc_allocation_data(data):
+    df = pd.DataFrame(data)
+    columns = [col for col in df.columns if col in sem_months + ['Project', 'User Name']]
+    col = [col for col in df.columns if col in ['Project', 'User Name']][0]
+    filt = df[col] != 'Total'
+    dff = df.loc[filt, columns]
+    return dff
+
+
+def save_planned_hours(df, table_name, con):
+    # format provided data
     
+    
+    
+    existing_df = pd.read_sql_table(table_name, con=con)
+    
+    existing_df
+    
+    df.to_sql("planned_hrs", con=con, if_exists='replace', index=False)  
