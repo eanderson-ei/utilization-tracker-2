@@ -274,7 +274,6 @@ def build_allocation_table(df):
     return df    
 
 
-
 def decalc_allocation_data(data):
     df = pd.DataFrame(data)
     columns = [col for col in df.columns if col in sem_months + ['Project', 'User Name']]

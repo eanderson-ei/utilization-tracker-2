@@ -83,8 +83,45 @@ def join_projects(hours_report, projects):
     pdf = projects.drop('Project Name', axis=1)
     
     ### ADD MISSING CODE FROM CHAD ###
-    pdf = pdf.append(pd.DataFrame({'Project ID': ['2013.000.002.01'],
-                                   'Charge Branch Description': ['OC WQIP TO5 PMs']}))
+    pdf = pdf.append(pd.DataFrame(
+        {
+            'Project ID': [
+                '2013.000.002.01',
+                '1002.001.001',
+                '1002.001.003',
+                '1002.001.004',
+                '1002.001.005',
+                '1002.001.006',
+                '1002.001.007',
+                '1002.002.002',
+                '1002.004.001',
+                '1002.004.002',
+                '1002.004.003',
+                '1002.005.001',
+                '1002.006.001',
+                '1002.007.001',
+                '1002.008.001'
+                ],
+            'Charge Branch Description': [
+                'OC WQIP TO5 PMs',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                'USAID LAC ESSC',
+                ]
+         }
+        )
+                     )
     ### ~~~ ###
     
     # merge projects to hours_report
@@ -328,6 +365,8 @@ def update_employees(e_df):
     e_df['User Name'] = e_df[['Last Name', 'First Name']].apply(
         lambda x: ', '.join(x), axis=1)
     
+    e_df.to_csv('data/e_df.csv')
+    
     # drop inactive employees
     filt = e_df['Active Flag'] == 'Y'
     e_df = e_df.loc[filt, :].copy()
@@ -356,7 +395,7 @@ def update_employees(e_df):
         f.truncate()
     
     # return active employee names for processing
-    return usernames['User Name'].values
+    return usernames['User Name'].unique()
 
 
 def compile_hours():
@@ -425,7 +464,7 @@ def compile_hours():
     print (f"...uploaded to PROJECTS")
     
     # load all hours from Google Sheet
-    hours_report = all_hours(client)
+    hours_report = all_hours(client)  # saves to data/debug.csv
     
     # load dates
     dates, months = load_dates(client)
@@ -438,11 +477,11 @@ def compile_hours():
     
     # names from hours report
     names_list = hours_report['User Name'].unique()
-    names_list.sort()
     
     # for each employee, build hours report (names from employees report)
-    for name in names: 
+    for name in names:
         if name in names_list:
+            # print(name)
             # build monthly hours report
             idf, first_last = idv_monthly_hours(hours_report, name)
 
