@@ -55,7 +55,7 @@ def auth_gspread():
     # creds for local development
     try:
         client = pygsheets.authorize(
-            service_file='secrets/gs_credentials.json'
+            service_file='secrets/gs_credentials_OLD.json'
             )
     # creds for heroku deployment
     except:
