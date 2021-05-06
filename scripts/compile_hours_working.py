@@ -49,7 +49,7 @@ def auth_gspread():
     # creds for local development
     try:
         client = pygsheets.authorize(
-            service_file='secrets/gs_credentials.json'
+            service_file='secrets/gs_credentials_OLD.json'
             )
     # creds for heroku deployment
     except:
@@ -77,70 +77,104 @@ def load_report(client, spreadsheet, sheet_title):
     return df
 
 
-def join_projects(hours_report, projects):
+def join_projects(client, hours_report, projects):
     print('Joining Projects')
-    # projects = load_report(client, 'Utilization-Inputs', 'PROJECTS')
-    pdf = projects.drop('Project Name', axis=1)
+
+    # pdf = projects.drop(['Project Name'], axis=1)
+    
+    
+    
+    
+    
+                         
     
     ### ADD MISSING CODE FROM CHAD ###
-    pdf = pdf.append(pd.DataFrame(
+    pdf = projects.append(pd.DataFrame(
         {
             'Project ID': [
-                '2013.000.002.01',
-                '1002.001.001',
-                '1002.001.003',
-                '1002.001.004',
-                '1002.001.005',
-                '1002.001.006',
-                '1002.001.007',
-                '1002.002.002',
-                '1002.004.001',
-                '1002.004.002',
-                '1002.004.003',
-                '1002.005.001',
-                '1002.006.001',
-                '1002.007.001',
-                '1002.008.001'
-                ],
-            'Charge Branch Description': [
-                'OC WQIP TO5 PMs',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                'USAID LAC ESSC',
-                ]
-         }
-        )
-                     )
+                2013
+            ],
+            'Project Name': [
+                'OC WQIP TO5 PMs'
+            ]
+        }
+    ))
+    
+    # pdf = pdf.append(pd.DataFrame(
+    #     {
+    #         'Project ID': [
+    #             '2013.000.002.01',
+    #             '1002.001.001',
+    #             '1002.001.003',
+    #             '1002.001.004',
+    #             '1002.001.005',
+    #             '1002.001.006',
+    #             '1002.001.007',
+    #             '1002.002.002',
+    #             '1002.004.001',
+    #             '1002.004.002',
+    #             '1002.004.003',
+    #             '1002.005.001',
+    #             '1002.006.001',
+    #             '1002.007.001',
+    #             '1002.008.001',
+    #             '1010.000.002',
+    #             '1010.000.001',
+    #             '1010.000.003',
+    #             '1010.000.004'
+    #             ],
+    #         'Charge Branch Description': [
+    #             'OC WQIP TO5 PMs',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'USAID LAC ESSC',
+    #             'Walton-SLED',
+    #             'Walton-SLED',
+    #             'Walton-SLED',
+    #             'Walton-SLED'
+    #             ]
+    #      }
+    #     )
+                    #  )
     ### ~~~ ###
     
     # merge projects to hours_report
-    df = hours_report.merge(pdf, on='Project ID', how='inner')
-    df.rename({'Charge Branch Description': 'Project',
+    
+    pdf = pdf.set_index('Project ID')
+    project_dict = pdf['Project Name'].to_dict()
+    project_dict = {str(key): str(value) for key, value in project_dict.items()}
+    
+    print(project_dict)
+    
+    hours_report['Charge Branch Description'] = hours_report['Project ID'].str[:4].replace(project_dict)
+    
+    # df = hours_report.merge(pdf, on='Project ID', how='inner')
+    hours_report.rename({'Charge Branch Description': 'Project',
                'Project ID': 'Task ID',
                'Project Name': 'Task Name'}, 
               axis=1, inplace=True)
     
-    if len(hours_report) > len(df):
-        print("!!! Tasks are missing project classifications. Run "
-              "Projects Tabular from Cognos again and retry." + 
-              f"Missing {len(hours_report) - len(df)}")
-        filt = ~hours_report['Project ID'].isin(df['Task ID'])
-        missing_df = hours_report[filt]
-        print(missing_df)
-        missing_df.to_csv('data/missing_projects.csv')
+    # if len(hours_report) > len(df):
+    #     print("!!! Tasks are missing project classifications. Run "
+    #           "Projects Tabular from Cognos again and retry." + 
+    #           f"Missing {len(hours_report) - len(df)}")
+    #     filt = ~hours_report['Project ID'].isin(df['Task ID'])
+    #     missing_df = hours_report[filt]
+    #     print(missing_df)
+    #     missing_df.to_csv('data/missing_projects.csv')
     
-    return df
+    return hours_report
 
 
 def all_hours(client):
@@ -168,10 +202,10 @@ def all_hours(client):
     df['Approved Hours'] = pd.to_numeric(df['Approved Hours'])
     df['Entry Year'] = pd.to_numeric(df['Entry Year'])
     
-    # reclass unbillable to R&D
+    # reclass unbillable to Unbillable
     filt = df['Task Name'].str.contains('Unbillable', na=False)
     df.to_csv('data/debug.csv')
-    df.loc[filt, 'Classification'] = 'R&D'
+    df.loc[filt, 'Classification'] = 'Unbillable'
     
     return df
 
@@ -437,13 +471,21 @@ def compile_hours():
     
     print('Length of in_df is ' + str(len(in_df)))
     
-    # read latest projects report
-    projects_in = get_latest_file(downloads, projects_file)
-    p_df = pd.read_csv(projects_in, sep='\t', 
-                        encoding='utf_16_le')
+    # # read latest projects report
+    # projects_in = get_latest_file(downloads, projects_file)
+    # p_df = pd.read_csv(projects_in, sep='\t', 
+    #                     encoding='utf_16_le')
+    
+    projects_in = load_report(client, 'Utilization-Inputs', 'ALL ACTIVITIES')
+    
+    filt = projects_in['Level Number'] == 1
+    p_df = projects_in.loc[filt].copy()
+    p_df = p_df.drop(['Organization ID', 'Organization Name', 'Level Number', 'Active (Y/N)'], axis=1)
+    p_df.rename(columns={'Project Name': 'Charge Branch Description'})
+                            
     
     # join utilization to projects
-    jun_mar_2021 = join_projects(in_df, p_df)
+    jun_mar_2021 = join_projects(client, in_df, p_df)
     
     print('Length of jun_mar_2021 is ' + str(len(jun_mar_2021)))
     

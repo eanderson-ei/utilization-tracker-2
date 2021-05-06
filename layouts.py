@@ -18,7 +18,7 @@ from app import app
 ### MONTHLY BURN RATE ###
 
 print('starting layouts.py')
-print('staring hidden divs')
+print('starting hidden divs')
 ### DIV STORES ###
 hours_report = html.Div(id='hours-report', style={'display': 'none'})
 
@@ -43,7 +43,7 @@ LOGO = app.get_asset_url('ei-logo-white.png')
 nav_items = dbc.Container([
     dbc.NavItem(dbc.NavLink('My Utilization', href='/')),
     dbc.NavItem(dbc.NavLink('My Projects', href='/my_projects')),
-    dbc.NavItem(dbc.NavLink('Allocation', href='/allocation'))  # turn on for dev
+    # dbc.NavItem(dbc.NavLink('Allocation', href='/allocation'))  # turn on for dev
 ]
 )
 
@@ -466,7 +466,3 @@ allocation_layout = html.Div([
     ),
     dcc.Store(id='data-store')
 ])
-
-
-if __name__ == '__main__':
-    app.run_server(debug=True)
