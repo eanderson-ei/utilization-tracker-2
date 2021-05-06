@@ -60,8 +60,6 @@ Conda environment: utilization-report-2
 - [ ] Switch Unbillable time codes to R&D (or appropriate category)
 - [ ] Fill in missing data for Org Name or otherwise assign staff to Practice Area
 - [ ] Add 'Preferred Name' for employees (e.g., Geeta)
-- [ ] Join Projects and Tasks 
-- [ ] Join Orgs and Projects
 - [ ] Change 'Projects' to 'Tasks'
 - [ ] Set up login system to change passwords
 
@@ -145,7 +143,7 @@ Conda environment: utilization-report-2
 - [x] Database for storing burn rates and allocations
   * https://www.youtube.com/watch?v=G65iy0AmthM (CRUD Data table)
   * https://www.youtube.com/watch?v=Mf3s0P4aVKw (Part 2, Connect to Database)
-- [ ] SQLAlchemy
+- [x] SQLAlchemy
   - https://towardsdatascience.com/sqlalchemy-python-tutorial-79a577141a91
 
 ## Tips & Tricks
@@ -380,3 +378,23 @@ Add Revenue, Margin as BANs for filter by date
 Add tab to show team view margins, revenue, over time (i.e., per month revenue and margin). 
 
 Margin calculation requires allocation of staff to team to distribute costs.
+
+
+
+
+
+## Data Flows
+
+### My Utilization
+
+1. Read hours report
+2. Update names options in select_name dropdown
+3. Pre-populate with name of person who signed in
+4. Store name of person who signed in (for use in My Projects)
+5. Display utilization chart
+
+### My Projects
+
+1. Read hours entries
+2. 
+

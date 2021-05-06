@@ -38,65 +38,7 @@ print('finished data load')
 # month_entries = functions.get_month_entries(hours_entries)
 # month_class = functions.get_classification(month_entries)  # used for project breakdown
 
-### UPDATE NAMES ###
-@app.callback(
-    [Output('select-name', 'options'),
-     Output('select-name', 'value')],
-    [Input('fire', 'children')],
-     [State('initial-state', 'data')]
-)
-def populate_names(_, existing_name):
-    with open('components/usernames.json') as f:
-        usernames = json.load(f)
-    # get list of unique names
-    names = hours_report['User Name'].unique()
-    names.sort()
-    options = [{'label': name, 'value': name} for name in names]
-    # get names
-    user = request.authorization['username']
-    user = usernames.get(user, None)
-    
-    if not existing_name:
-        user = request.authorization['username']
-        user = usernames.get(user, None)
-        
-    else:
-        user = existing_name
-        
-    return options, user
 
-
-@app.callback(
-    Output('initial-state', 'data'),
-    [Input('select-name', 'value')]
-)
-def store_name(name):
-    if name:
-        return name
-
-### UPDATE UTILIZATION CHART ###
-@app.callback(
-    Output('utilization-chart', 'figure'),
-    [Input('select-name', 'value'),
-     Input('util-slider', 'value'),
-     Input('reset-axes', 'n_clicks')]
-)
-def update_utilization_chart(name, predict_input, n_clicks):
-    if name:
-        fig = visualizations.plot_utilization(hours_report, 
-                                              name,
-                                              predict_input,
-                                              hours_entries)  # add month_class for project breakdown
-    else:
-        raise PreventUpdate
-    
-    if n_clicks:
-        fig = visualizations.plot_utilization(hours_report, 
-                                              name,
-                                              predict_input,
-                                              hours_entries)
-    
-    return fig
 
 
 ### UPDATE PROJECTS CHART ###
@@ -214,10 +156,7 @@ def update_entry_table(name, start_date, end_date, clickData):
     [Input('projects-chart', 'clickData')]
 )
 def enable_reset(clickData):
-    if clickData is None:
-        return True
-    else:
-        return False
+    return clickData is None
 
 
 # reset projects chart
@@ -347,18 +286,18 @@ def populate_filter(active_tab, existing_name):
     [Input('tabs', 'active_tab')]
 )
 def populate_semester_filter(active_tab):
-    if active_tab == 'by-person' or active_tab == 'by-project':
+    if active_tab in ['by-person', 'by-project']:
         periods = ['Sem 2 | 2020-2021', 'Sem 1 | 2020-2021',
                     'Sem 2 | 2019-2020', 'Sem 1 | 2019-2020']
         options =  [{'label': period, 'value': period}
                     for period in periods]
         value = periods[1]
-    
+
     elif active_tab == 'by-month':
         options = [{'label': month + ' 2020', 'value': month  + ' 2020'}
                     for month in sem_months]
         value = 'Sep 2020'
-    
+
     return options, value
     
 
@@ -561,24 +500,23 @@ def style_allocation_table(timestamp, data, semester):
 def save_to_postgres(n_clicks, data, semester, table_filter):
     if n_clicks is None:
         raise PreventUpdate
-    else:
-        ctx = callback_context
-        button_id = ctx.triggered[0]['prop_id'].split('.')[0]
-        
-        df = functions.decalc_allocation_data(data)
-        col = [col for col in df.columns if col in ['Project', 'User Name']][0]
-        df = df.melt(id_vars=col, var_name='Entry Month', value_name='Hours')
-        
-        sem = semester.split('|')[0].strip()
-        sy = semester.split('|')[1].strip()
-        base_year = int(sy[:4])
-        
-        sem_years = [base_year + helper for helper in functions.year_helper]
-        df['Entry Year'] = df['Entry Month'].apply(lambda x: sem_years[functions.sem_months.index(x)])
-        
-        if button_id == 'save-plan':
-            df['User Name'] = table_filter
-                
-        print(df)
+    ctx = callback_context
+    button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+    df = functions.decalc_allocation_data(data)
+    col = [col for col in df.columns if col in ['Project', 'User Name']][0]
+    df = df.melt(id_vars=col, var_name='Entry Month', value_name='Hours')
+
+    sem = semester.split('|')[0].strip()
+    sy = semester.split('|')[1].strip()
+    base_year = int(sy[:4])
+
+    sem_years = [base_year + helper for helper in functions.year_helper]
+    df['Entry Year'] = df['Entry Month'].apply(lambda x: sem_years[functions.sem_months.index(x)])
+
+    if button_id == 'save-plan':
+        df['User Name'] = table_filter
+
+    print(df)
         
     

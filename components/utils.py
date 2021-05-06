@@ -55,7 +55,7 @@ def auth_gspread():
     # creds for local development
     try:
         client = pygsheets.authorize(
-            service_file='secrets/gs_credentials_OLD.json'
+            service_file='secrets/gs_credentials.json'
             )
     # creds for heroku deployment
     except:
@@ -81,6 +81,7 @@ def load_report(client, spreadsheet, sheet_title):
     df.dropna(axis=0, how='all', inplace=True)
     
     return df
+
 
 
 def import_hours():
@@ -200,8 +201,6 @@ def predict_utilization(idf, predict_input):
                                   / idf.loc[filt, 'MEH'].cumsum())
     idf.loc[filt, 'Avg FTE'] = (idf.loc[filt, 'Predicted Total'].cumsum()
                                   / idf.loc[filt, 'MEH'].cumsum())
-                            
-    print(idf)
         
     return idf, max_DT
 
@@ -240,6 +239,8 @@ def read_table(table_name, con):
     return df
 
 
+
+### -------------- ALLOCATION TABLE -------------------------------------- ###
 def build_allocation_table(df):
     # calcualte DT column
     df['DT'] = pd.to_datetime(df['Entry Year'].astype(str)
