@@ -1,0 +1,8 @@
+name: utilization-report-nb
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pandas
+  - jupyterlab
+prefix: C:\Users\Erik\miniconda3\envs\utilization-report-nb
