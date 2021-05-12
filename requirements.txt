@@ -4,6 +4,7 @@ dash-auth
 dash-bootstrap-components
 dash-daq
 Flask
+flask-sqlalchemy
 gunicorn
 numpy 
 pandas 
