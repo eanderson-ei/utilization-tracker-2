@@ -1,9 +1,40 @@
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output
+import json
+import pandas as pd
+from datetime import datetime as dt
+
+from components.utils import auth_gspread, load_report
 
 from app import app
 
+### ----------------------------- SETUP ---------------------------------- ###
+
+client = auth_gspread()
+# load hours report
+print('loading reports')
+hours_report = pd.concat([
+    load_report(client, 'hours-entries', '2021-table'),
+    load_report(client, 'hours-entries', '2020-table'),
+    load_report(client, 'hours-entries', '2019-table')
+])
+hours_report['DT'] = pd.to_datetime(hours_report['DT'])
+
+# load usernames
+with open('components/usernames.json') as f:
+    usernames = json.load(f)
+
+# load hours entries
+hours_entries = pd.concat([
+    load_report(client, 'hours-entries', '2021-hours'),
+    load_report(client, 'hours-entries', '2020-hours'),
+    load_report(client, 'hours-entries', '2019-hours')
+])
+hours_entries['Hours Date'] = pd.to_datetime(hours_entries['Hours Date'])
+
 LOGO = app.get_asset_url('ei-logo-white.png')
+
 
 ### ----------------------------- LAYOUT ----------------------------------###
 
@@ -11,6 +42,7 @@ LOGO = app.get_asset_url('ei-logo-white.png')
 nav_items = dbc.Container([
     dbc.NavItem(dbc.NavLink('My Utilization', href='/')),
     dbc.NavItem(dbc.NavLink('My Projects', href='/my_projects')),
+    dbc.NavItem(dbc.NavLink('My Team', href='/my_team')),
     # dbc.NavItem(dbc.NavLink('Allocation', href='/allocation'))  # turn on for dev
 ]
 )
@@ -44,3 +76,6 @@ navbar = dbc.Navbar(
     dark=True,
     className="mb-5"
 )
+
+
+### ---------------------------- CALLBACKS ------------------------------- ###

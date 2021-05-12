@@ -12,11 +12,11 @@ Conda environment: utilization-report-2
 
 *Near term*
 
-- [ ] Add % to My Projects to see time spent relative to MEH
+- [x] Add % to My Projects to see time spent relative to MEH
 - [ ] Add compare to planned to see time spent relative to planned (allocation table)
 - [x] Change date range in My Projects from today's month to last valid date's month
 - [x] Format hours in Entries table to floats rather than strings
-- [ ] Clear click data when selecting new employee in Projects chart
+- [x] Clear click data when selecting new employee in Projects chart
 - [ ] Fix employee name store when two or more people are in the app (use session variable in Flask instead of dcc.Store).
 - [ ] Add allocation table
   - [x] Add all months to table display
@@ -38,6 +38,13 @@ Conda environment: utilization-report-2
   - [ ] fix total column 'Project' key error
 - [x] Set calendar min to April 2020
 - [ ] Export Time Entries
+- [x] Notebook predict_utilization and optimize
+- [x] Remove hardcoded meh lookup
+- [x] Concatenate all hour reports and hours entries
+- [x] Check performance of data loaded from sheets, if poor replace with sql calls on database (use date-picker and select-name as inputs to sql call)
+- [ ] Copy compile_hours notebook to compile_hours script
+- [ ] Run with new data
+- [ ] Test & deploy
 
 *Long term*
 
@@ -50,7 +57,8 @@ Conda environment: utilization-report-2
 - [x] Ask JS if we want to weight FTE for employee type (standard or part time), now no: leads to very high FTEs for employees who are part time and work full time, seems confusing too and not consistent across utilization and fte
 - [ ] Add allocation table
 - [ ] Build portfolio view (utilization)
-- [ ] Build team view (filled area chart bulk effort over time, hours by person h-bar for specified time period)
+- [x] Build team view (filled area chart bulk effort over time, hours by person h-bar for specified time period)
+- [ ] 
 
 ##### Deltek Changes to Request
 

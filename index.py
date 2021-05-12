@@ -4,7 +4,9 @@ from dash.dependencies import Input, Output
 # see https://community.plot.ly/t/nolayoutexception-on-deployment-of-multi-page-dash-app-example-code/12463/2?u=dcomfort
 from app import server
 from app import app
-from apps import utilization
+from apps import utilization, projects, team
+from apps.common import navbar
+
 # from layouts import layout_main, projects_layout, allocation_layout
 # import callbacks
 
@@ -45,6 +47,7 @@ app.index_string = '''
 # Layout placeholder
 app.layout = html.Div([
     dcc.Location(id='url', refresh=False),
+    navbar,
     html.Div(id='page-content')
 ])
 
@@ -53,8 +56,10 @@ app.layout = html.Div([
 def display_page(pathname):
     if pathname == '/':
         return utilization.layout
-    # elif pathname == '/my_projects':
-    #      return projects_layout
+    elif pathname == '/my_projects':
+         return projects.layout
+    elif pathname == '/my_team':
+        return team.layout
     # elif pathname == '/allocation':
     #      return allocation_layout
     else:
@@ -62,4 +67,4 @@ def display_page(pathname):
 
 
 if __name__ == '__main__':
-    app.run_server()
+    app.run_server(debug=True)

@@ -1,36 +1,67 @@
-"""converts hours entries to monthly, compiling from 2019 onward from
-Replicon and Deltek"""
-
 import pygsheets
 import pandas as pd
 import numpy as np
-import datetime
-
-import time
-
-start = datetime.datetime.now()
-# TODO: handle instance when employee changes work description type
-
-# GLOBALS
-
-# strategic year starts in April, semester 2 starts in November
-sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-                'Jan', 'Feb', 'Mar']
-year_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 
-               'Oct', 'Nov', 'Dec']
-semester1 = sem_months[:7]
-semester2 = sem_months[7:]
-month_index = np.arange(0,12)
-sem_dict = dict(zip(sem_months, month_index))
-month_dict = dict(zip(year_months, month_index))
+from datetime import datetime as dt
+import os
+import sys
+import json
 
 
-# FUNCTIONS
+### FILE LOCATIONS ###
 
-# Authorize Google to access Utilization Project @
-# https://drive.google.com/drive/folders/10J1e92bNZ-KF-X2CjedCleQf_dUWccJH?usp=sharing
-# see here for instructions on setting up a Project 
-# https://eanderson-ei.github.io/ei-dev/deployment/google-api/
+# Download folder where hours report will be saved from Deltek
+downloads = r'C:/Users/Erik/Downloads/'
+# Name of the file, excluding any appended numeric distinguisher for repeats
+# and name of sheets
+tess_file = 'Time and Employee WS'
+hours_entries_sheet = 'Hours Entries'
+employees_sheet = 'Employee WS'
+
+funded_actuals_file = 'Projects and Budgets'
+projects_sheet = 'Activities'
+funded_sheet = 'Funded'
+actuals_sheet = 'Actuals'
+
+# Google sheets at deltek-server
+funded_actuals_sh = 'funded-actuals'
+funded_wks = 'funded'
+actuals_wks = 'actuals'
+
+deltek_info_sh = 'deltek-info'
+employee_work_sched_wks = 'employee-ws'
+codes_wks = 'codes'
+projects_wks = 'projects'
+
+hours_entries_sh = 'hours-entries'
+all_hours_wks = 'all-hours'
+all_tables_wks = 'all-tables'
+years = [2019, 2020, 2021]
+hours_sheets = [str(year) + "-hours" for year in years]
+table_sheets = [str(year) + "-table" for year in years]
+
+current_hours_wks = hours_sheets[-1]
+current_table_wks = table_sheets[-1]
+
+### FUNCTIONS ###
+
+def get_latest_file(downloads, file_name):
+    # list all files in downloads
+    all_files = [f for f in os.listdir(downloads) 
+                 if f.startswith(file_name)]
+    # get save times
+    file_versions = [os.path.getmtime(os.path.join(downloads, f)) 
+                     for f in all_files]
+    # access file with most recent save time
+    latest_file = [f for f in all_files 
+                   if os.path.getmtime(os.path.join(downloads, f)) 
+                   == max(file_versions)]
+    
+    latest_file = os.path.join(downloads, latest_file[0])
+    print(latest_file)
+    
+    return latest_file
+
+
 def auth_gspread():
     """Authorize Google to access the Utilization Project"""
     # creds for local development
@@ -64,94 +95,63 @@ def load_report(client, spreadsheet, sheet_title):
     return df
 
 
-def get_dates(client):
-    # load dates table
-    dates = load_report(client, 'Utilization-Inputs', 'DATES')
-    dates['Date'] = pd.to_datetime(dates['Date'])
-    dates['Remaining'] = pd.to_numeric(dates['Remaining'])
-    dates['Year'] = pd.DatetimeIndex(dates['Date']).strftime('%Y')
-    dates['Year'] = pd.to_numeric(dates['Year'])
-    dates['Month'] = pd.DatetimeIndex(dates['Date']).strftime('%b')
-    
-    return dates
+def process_work_schedule(row):
+    if pd.isnull(row['Work Schedule']):
+        return np.nan
+    try:
+        return int(row['Work Schedule']) / 100
+    except ValueError:
+        return 1.0
 
 
-def get_hours_report(client):
-    """Combine Replicon and Cognos hours reports
-    :param client: client object for accessing google
-    :returns: dataframe of hours x person x day
-    """
-    print("building hours report")
-    # load 2019 hours
-    df2019 = load_report(client, 'Utilization-Hours', 'hours-2019')
-    
-    # load 2020 apr - may hours
-    df2020_1 = load_report(client, 'Utilization-Hours','apr-may-2020')
-
-    # load jun 2020 + hours
-    df2020_2 = load_report(client, 'Utilization-Hours','june-mar-2020')
-    
-    # union all 
-    df = pd.concat([df2019, df2020_1, df2020_2])
-    
-    # create month and year convenience columns
-    df['Entry Month'] = pd.DatetimeIndex(df['Hours Date']).strftime('%b')
-    df['Entry Year'] = pd.DatetimeIndex(df['Hours Date']).strftime('%Y')
-    
-    # set dtypes
-    df['Hours Date'] = pd.to_datetime(df['Hours Date'])
-    df['Entered Hours'] = pd.to_numeric(df['Entered Hours'])
-    df['Approved Hours'] = pd.to_numeric(df['Approved Hours'])
-    df['Entry Year'] = pd.to_numeric(df['Entry Year'])
-    
+def first_last_to_username(df):
     # create user name column
+    df['First Name'] = df['First Name'].str.strip()  # remove whitespace before Replicon first names
+    df['Last Name'] = df['Last Name'].str.strip()
     df['User Name'] = df[['Last Name', 'First Name']].apply(
-        lambda x: ','.join(x), axis=1)
+        lambda x: ', '.join(x), axis=1)
     
-    # reclass unbillable to R&D
-    df['Code'] = df['User Defined Code 3']
-    filt = df['Project Name'].str.contains('Unbillable')
-    df.loc[filt, 'Code'] = 'IRD'
-    
-    # reclass 'User Defined Code 3' to category
-    codes_df = load_report(client, 'Utilization-Inputs', 'CODES')
-    codes = dict(zip(codes_df['User Defined Code 3'], codes_df['Code']))
-    df['Classification'] = df['Code'].replace(codes)
+    df = df.drop(['First Name', 'Last Name'], axis=1)
     
     return df
 
 
-def get_employee_types(hours_report):
-    # TODO: consider adding employee report to time report for these data
-    # get employee work as dictionary, note only last valid type is returned
-    emp_type = set(zip(hours_report['User Name'], 
-                       hours_report['Work Schedule Description']))
-    emp_type = dict(emp_type)
+def save_to_gs(df, client, worksheet, sheet_name):
+    sh = client.open(worksheet)
+    wks = sh.worksheet_by_title(sheet_name)
+    wks.set_dataframe(df, 'A1', fit = True)
+    print (f'{sheet_name} uploaded to {worksheet}')
     
-    # return
-    return emp_type
 
-
-def get_first_last(hours_report, name):
-    # Subset by individual
-    idf = hours_report.loc[hours_report['User Name']==name]
-    if idf.empty:
-        print (f'Employee {name} not found')
-        pass
+def update_logins(e_df):    
+    # convert to dictionary
+    usernames = e_df.set_index('E-mail Address')
+    emp_dict = usernames['User Name'].to_dict()
+    
+    # save as json to allow lookup of report based on email address
+    with open('components/usernames.json', 'w') as f:
+        json.dump(emp_dict, f, indent=4)
         
-    # get first day worked and last day worked
-    first_day_worked = idf['Hours Date'].min()
-    last_day_worked = idf.loc[~idf['Classification'].isin(['Time Off']), 
-                             'Hours Date'].max()
-    if last_day_worked > datetime.datetime.today():
-        last_day_worked = datetime.datetime.today().date()
-    first_last = (first_day_worked, last_day_worked)
+    # associate all emails with password 'incentives'
+    #TODO: allow for custom passwords
+    usernames['password'] = 'incentives'
+    pass_dict = usernames['password'].to_dict()
     
-    return first_last
+    # save as json to secrets
+    with open('secrets/passwords.json', 'r+') as f:
+        existing_emp = json.load(f)
+        for key in pass_dict.keys():
+            if key and not key in existing_emp and not np.isnan(key):
+                print(f'UPDATE ENV VAR: {key} IS NEW!')
+        f.seek(0)
+        json.dump(pass_dict, f, indent=4)
+        f.truncate()
+    
+    print('login information updated')
 
 
 def multiindex_pivot(df, columns=None, values=None):
-    #https://github.com/pandas-dev/pandas/issues/23955
+    """https://github.com/pandas-dev/pandas/issues/23955"""
     names = list(df.index.names)
     df = df.reset_index()
     list_index = df[names].values
@@ -164,157 +164,306 @@ def multiindex_pivot(df, columns=None, values=None):
     return df
 
 
-def get_monthly_hours(hours_report):
-    print("building monthly report")
-    monthly_hours = (
-        hours_report.groupby(['User Name', 'Entry Month', 'Entry Year', 'Classification'])
+def get_idv_hours_entries(hours_entries, name):
+    # drop hours entered after today (common with vacation, time off)
+    filt = (
+                (hours_entries['User Name']==name) 
+                & (hours_entries['Hours Date'] <= dt.today())
+                )
+    idf = hours_entries.loc[filt, :]
+    
+    return idf
+
+
+def get_first_last(idf):
+    # get first day worked and last day worked
+    first_day_worked = idf['Hours Date'].min()
+    last_day_worked = idf['Hours Date'].max()
+    first_last = (first_day_worked, last_day_worked)
+
+    return first_last
+
+
+def pivot_idf(idf):
+    idf_sum = (
+        idf.groupby(['Entry Month', 'Entry Year', 'Classification'])['Entered Hours']
         .sum()
         .reset_index()
-        .set_index(['User Name', 'Entry Year', 'Entry Month'])
+        .set_index(['Entry Year', 'Entry Month'])
     )
     
-    df = multiindex_pivot(monthly_hours,
-                          columns='Classification',
-                          values='Entered Hours')
-                                                                                                                                                                                              
-    df.reset_index(inplace=True)
-    
-    df['month_id'] = df['Entry Month'].replace(month_dict)
-    df.sort_values(by=['User Name', 'Entry Year', 'month_id'], inplace=True)
-    df.drop('month_id', axis=1, inplace=True)
-    
-    df.set_index(['User Name', 'Entry Year', 'Entry Month'], inplace=True)
-    
-    df['Total'] = df.sum(axis=1, skipna=True)
-    
-    df.fillna(0, inplace=True)
-    
-    return df
+    # pivot table
+    idf_pivot = multiindex_pivot(idf_sum,
+                                 columns='Classification', 
+                                 values='Entered Hours')
+
+    # fill na as 0
+    idf_pivot.fillna(0, inplace=True)
+
+    # calculate total hours
+    idf_pivot['Total'] = idf_pivot.sum(axis=1, skipna=True)
+
+    # sort by month
+    idf_pivot.reset_index(inplace=True)
+    idf_pivot['DT'] = pd.to_datetime(idf_pivot['Entry Year'].astype(str)
+                            + idf_pivot['Entry Month'], 
+                            format='%Y%b')
+    idf_pivot.sort_values(by=['DT'], inplace=True)
+
+    # add strategic year helper column
+    def strategy_year(row):
+        if row['DT'].month < pd.to_datetime('Apr', format='%b').month:
+            return str(row['DT'].year - 1) + "-" + str(row['DT'].year)
+        else:
+            return str(row['DT'].year) + "-" + str(row['DT'].year + 1)
 
 
-def add_meh(monthly_hours, dates):
-    # calculate MEH per month
-    months = dates.groupby(['Year', 'Month']).max()
-    months['MEH'] = months['Remaining'] * 8
-    # months.reset_index(inplace=True)
-    # months.set_index(['Year', 'Month'], inplace=True)
-    
-    # reset index of hours_report
-    monthly_hours.reset_index(inplace=True)
-    monthly_hours.set_index(['Entry Year', 'Entry Month'], inplace=True)
-    
-    # join MEH to idf
-    MEH_join = months.rename_axis(index={'Year': 'Entry Year',
-                                         'Month': 'Entry Month'})
-    monthly_hours = monthly_hours.join(MEH_join['MEH'])
-    
-    monthly_hours.reset_index(inplace=True)
-    monthly_hours.set_index(['User Name', 'Entry Year', 'Entry Month'],
-                            inplace=True)
-    
-    return monthly_hours
- 
- 
-def correct_for_start_date(monthly_hours, dates, first_last, name):
-    # correct for employees who start in middle of period
+    idf_pivot['Strategy Year'] = idf_pivot.apply(strategy_year, axis=1)
+
+    # add semester helper column
+    def semester(row):
+        if (row['DT'].month < pd.to_datetime('Nov', format='%b').month and
+        row['DT'].month > pd.to_datetime('Mar', format='%b').month):
+            return 'Sem 1'
+        else: 
+            return 'Sem 2'
+
+
+    idf_pivot['Semester'] = 'None'
+
+    for strategy_year in idf_pivot['Strategy Year'].unique():
+        filt = idf_pivot['Strategy Year'] == strategy_year
+        idf_pivot.loc[filt, 'Semester'] = idf_pivot.loc[filt, :].apply(semester, axis=1)
+
+    # set index
+    idf_pivot.set_index(['Entry Year', 'Entry Month'], inplace=True)
+
+    return idf_pivot
+
+
+def add_meh(idf_pivot, first_last):
+    idf_pivot['MEH'] = idf_pivot['DT'].apply(
+        lambda x: 8 * len(pd.bdate_range(x, x + pd.offsets.MonthBegin(1)))
+    )
+
+    # correct for employees who start in middle of the period
     first_month_worked = first_last[0].strftime('%b')
-    first_year_worked = int(first_last[0].strftime('%Y'))
-    first_month_MEH = dates.loc[dates['Date']==first_last[0], 'Remaining'] * 8 
-    monthly_hours.at[
-        (name, first_year_worked, first_month_worked), 'MEH'] = first_month_MEH
+    first_year_worked = first_last[0].strftime('%Y')
+
+    first_month_MEH = 8 * len(pd.bdate_range(first_last[0], first_last[0] + pd.offsets.MonthBegin(1)))
+
+    idf_pivot.at[(first_year_worked, first_month_worked), 'MEH'] = first_month_MEH
     
-    return monthly_hours
+    return idf_pivot
 
 
-def calc_utilization(monthly_hours, dates, first_last, name):
-    """calculate utilization actuals and projections from idf"""
-    # TODO: meh_hours coming back as df with len 108, should be single value
-    # Calculate key variables
-    last_day_worked = first_last[1]
-    last_month_worked = last_day_worked.strftime('%b')
-    last_year_worked = int(last_day_worked.strftime('%Y'))
-    meh_hours = monthly_hours.loc[(name, last_year_worked, last_month_worked), 'MEH']
-    print(f'MEH HOURS: {meh_hours}')
-    days_remaining = dates.loc[dates['Date']==last_day_worked, 'Remaining'] - 1
-    print(f'DAYS REMAINING: {days_remaining}')
-    meh_hours_to_date = meh_hours - days_remaining * 8
-    print('1')
+def calc_utilization(idf_pivot, first_last):
+    # Calculate meh_hours_to_date
+    fte_remaining = 8 * len(pd.bdate_range(
+        first_last[1] + pd.offsets.Day(1), first_last[1] + pd.offsets.MonthBegin(1)))
+    last_month_worked = first_last[1].strftime('%b')
+    last_year_worked = first_last[1].strftime('%Y')
+    meh_hours = idf_pivot.loc[(last_year_worked, last_month_worked), 'MEH']
+    meh_hours_to_date = meh_hours - fte_remaining
     
-    monthly_hours['Utilization'] = monthly_hours['Billable']/monthly_hours['MEH']
-    current_billable = monthly_hours.loc[(name, last_year_worked, last_month_worked), 
-                        'Billable']        
-    predicted_hours = (current_billable/meh_hours_to_date) * meh_hours
-    print('2')
-    
+    # Calculate predicted billable hours for the current month
+    if 'Billable' in idf_pivot.columns:  
+        current_billable = idf_pivot.loc[(last_year_worked, last_month_worked), 
+                                'Billable']      
+        predicted_hours = (current_billable / meh_hours_to_date) * meh_hours
+    # for employees with no billable time, billable and predicted hours are 0
+    else:  
+        idf_pivot['Billable'] = predicted_hours = 0
+        
+
+    # Calculate actual utilization for all months
+    idf_pivot['Utilization'] = idf_pivot['Billable'] / idf_pivot['MEH']
+
     # Calculate utilization to date for this month
-    monthly_hours['Util to Date'] = monthly_hours['Utilization']
+    idf_pivot['Util to Date'] = idf_pivot['Utilization']
     util_to_date = predicted_hours/meh_hours
-    monthly_hours.at[(name, last_year_worked, last_month_worked), 'Util to Date'] = (
+    idf_pivot.at[(last_year_worked, last_month_worked), 'Util to Date'] = (
         util_to_date
         )
-    print('3')
-    
-    return monthly_hours
 
+    # Calculate actual FTE for all months
+    idf_pivot['FTE'] = idf_pivot['Total'] / idf_pivot['MEH']
 
-def calc_meh(monthly_hours, dates, first_last, name, emp_type):
-    # Calculate key variables
-    last_day_worked = first_last[1]
-    last_month_worked = last_day_worked.strftime('%b')
-    last_year_worked = int(last_day_worked.strftime('%Y'))
-    meh_hours = monthly_hours.loc[(name, last_year_worked, last_month_worked), 'MEH']
-    days_remaining = dates.loc[dates['Date']==last_day_worked, 'Remaining'] - 1
-    meh_hours_to_date = meh_hours - days_remaining * 8
-    
-    # Calculate FTE
-    if idv_emp_type == 'Standard':
-        pass
-    elif '80' in idv_emp_type:
-        monthly_hours['MEH'] = monthly_hours['MEH'] * 0.80
-    elif '75' in idv_emp_type:
-        monthly_hours['MEH'] = monthly_hours['MEH'] * 0.75 
-
-    monthly_hours['FTE'] = monthly_hours['Total'] / monthly_hours['MEH']
-    current_total = monthly_hours.loc[(name, last_year_worked, last_month_worked), 
+    # Calculate FTE to date for this month
+    current_total = idf_pivot.loc[(last_year_worked, last_month_worked), 
                             'Total']
-    predicted_total = (current_total/meh_hours_to_date) * meh_hours
-    monthly_hours['FTE to Date'] = monthly_hours['FTE']
-    fte_to_date = predicted_total/meh_hours
-    monthly_hours.at[(name, last_year_worked, last_month_worked), 'FTE to Date'] = (
+    predicted_total = (current_total / meh_hours_to_date) * meh_hours
+    idf_pivot['FTE to Date'] = idf_pivot['FTE']
+    fte_to_date = predicted_total / meh_hours
+    idf_pivot.at[(last_year_worked, last_month_worked), 'FTE to Date'] = (
         fte_to_date
         )
+    
+    return idf_pivot
 
-    return monthly_hours
 
+### EXECUTE ###
+if __name__ == '__main__':
+    
+    start = dt.now()
 
-if __name__=='__main__':
+    # load data
     client = auth_gspread()
-    
-    hours_report = get_hours_report(client)
-    dates = get_dates(client)
-    
-    emp_types = get_employee_types(hours_report)
-    
-    employees = hours_report['User Name'].unique()
-    
-    emp_first_last = {}
-    for employee in employees:   
-        first_last = get_first_last(hours_report, employee)
-        emp_first_last.update({employee: first_last})
-    
-    monthly_hours = get_monthly_hours(hours_report)
-    
-    monthly_hours = add_meh(hours_report, dates)
-    
-    for employee in employees:
-        print(f'Processing {employee}')
-        first_last = emp_first_last.get(employee)
-        monthly_hours = correct_for_start_date(monthly_hours, dates, first_last, employee)
-        monthly_hours = calc_utilization(monthly_hours, dates, first_last, employee)
-        monthly_hours = calc_meh(monthly_hours, dates, first_last, employee)
-    
-    print(monthly_hours)
 
-    print(datetime.datetime.now() - start)
+    # locate Cognos report from TESS
+    tess_fn = get_latest_file(downloads, tess_file)
+
+    # read employees to dataframe
+    employeeWS_df = pd.read_excel(tess_fn, employees_sheet)
+
+    # filter out Employee IDs < 100000
+    filt = employeeWS_df['Employee ID'] > 100000
+    employeeWS_df = employeeWS_df.loc[filt]
+
+    # convert Work Schedule column to percent
+    employeeWS_df['Work Schedule'] = employeeWS_df.apply(process_work_schedule, axis=1)
+
+    # create user name column
+    employeeWS_df = first_last_to_username(employeeWS_df)
+
+    # add organization
+    employeeWS_df['Organization'] = 'Environmental Incentives'
+
+    # save employee ws to deltek-info
+    save_to_gs(employeeWS_df, client, deltek_info_sh, employee_work_sched_wks)
+
+    # drop duplicate employee entries
+    e_df = employeeWS_df[[
+        'Employee ID', 'User Name', 'E-mail Address', 'Active Flag'
+        ]].copy()
+
+    e_df = e_df.drop_duplicates()
+
+    # drop inactive employees
+    filt = e_df['Active Flag'] == 'Y'
+    e_df = e_df.loc[filt, :].copy()
+
+    # update login information (replace with individual login system)
+    update_logins(e_df)
+
+    # Read hours entries
+    hours_entries = pd.read_excel(tess_fn, hours_entries_sheet)
+
+    # Read hours entries
+    # Deltek adds rows for long comments and merges cells (why are they like this?)
+    # remove null rows (i.e., the added row)
+    hours_entries = hours_entries.dropna(how='all')
+
+    # create month and year convenience columns
+    hours_entries['Entry Month'] = pd.DatetimeIndex(hours_entries['Hours Date']).strftime('%b')
+    hours_entries['Entry Year'] = pd.DatetimeIndex(hours_entries['Hours Date']).strftime('%Y')
+
+    # create user name column
+    hours_entries = first_last_to_username(hours_entries)
+
+    # rename columns
+    hours_entries = hours_entries.rename(
+                        {'Project ID': 'Task ID', 'Project Name': 'Task Name'}, 
+                    axis=1)
+
+    # Code hours entries
+    # read in codes 
+    codes_df = load_report(client, deltek_info_sh, codes_wks)
+
+    # convert to dictionary
+    codes_df = codes_df.set_index('User Defined Code 3')
+    codes_dict = codes_df['Code'].to_dict()
+
+    # replace User defined codes with Coes
+    hours_entries['Classification'] = hours_entries['User Defined Code 3'].replace(codes_dict)
+
+    # locate Cognos report from TESS
+    projects_fn = get_latest_file(downloads, funded_actuals_file)
+
+    # read employees to dataframe
+    projects_df = pd.read_excel(projects_fn, projects_sheet)
+
+    # remove whitespace
+    projects_df['Project Name'] = projects_df['Project Name'].str.strip()
+    projects_df['Organization Name'] = projects_df['Organization Name'].str.strip()
+
+    # Save projects to Google Sheets
+    save_to_gs(projects_df, client, deltek_info_sh, projects_wks)
+
+    # Join projects to hours_entries
+    # filter projects to Level 1 only
+    filt = projects_df['Level Number'] == str(1)
+    projects_df = projects_df.loc[filt, ['Project ID', 'Project Name']].copy()
+
+    # check for uniqueness of project id
+    assert len(projects_df) == len(projects_df['Project ID'].unique()), "Check for duplicate project IDs at Level 1"
+
+    # convert to dictionary with keys as strings
+    projects_df = projects_df.set_index('Project ID')
+    project_dict = projects_df['Project Name'].to_dict()
+    project_dict = {str(key): str(value) for key, value in project_dict.items()}
+
+    hours_entries['Project'] = hours_entries['Task ID'].str[:4].replace(project_dict)
+
+    # update 'Indirect' Projects to Classification
+    filt = hours_entries['Project'] == 'Indirect'
+    hours_entries.loc[filt, 'Project'] = hours_entries.loc[filt, 'Classification']
+
+    # update 'Unbillable'
+    filt = hours_entries['Task Name'].str.contains('Unbillable', na=False)
+    hours_entries.loc[filt, 'Classification'] = 'Unbillable'
+
+    # obscure time off type and comments
+    filt = hours_entries['Classification'] == 'Time Off'
+    hours_entries.loc[filt, 'Task Name'] = 'Time Off'
+    hours_entries.loc[filt, 'Comments'] = ''
+
+    # save hours entries to google sheets
+    save_to_gs(hours_entries, client, hours_entries_sh, current_hours_wks)
+
+    timetable_list = []
+
+    for name in hours_entries['User Name'].unique():
+        print(f'Processing {name}')
+        # Build timetable for each employee
+        idf = get_idv_hours_entries(hours_entries, name)
+        
+        # get first and last day worked
+        first_last = get_first_last(idf)
+        
+        # pivot individual hours
+        idf_pivot = pivot_idf(idf)
+
+        # add meh
+        idf_pivot = add_meh(idf_pivot, first_last)
+        
+        # calc utilization
+        idf_pivot = calc_utilization(idf_pivot, first_last)
+        
+        # associate name with record
+        idf_pivot['User Name'] = name
+        idf_pivot = idf_pivot.reset_index()
+        
+        timetable_list.append(idf_pivot)
+        
+    # concat all timetables
+    timetables = pd.concat(timetable_list)
+
+    # upload timetables to google sheets
+    save_to_gs(timetables, client, hours_entries_sh, current_table_wks)
 
 
+    ### CHECKS ###
+
+    # check for 40 hours per week
+    hours_entries_week = hours_entries.copy()
+    hours_entries_week['week'] = hours_entries_week['Hours Date'].dt.isocalendar().week
+    filt = hours_entries_week['Classification'] == 'Billable'
+    weekly_hours = hours_entries_week.loc[filt].groupby(['User Name','Entry Year', 'Entry Month', 'week'])['Entered Hours'].sum()
+    filt = weekly_hours > 40
+
+    print('The following employees have worked more than 40 billable hours in a week:\n')
+    for idx, row in weekly_hours.loc[filt].iteritems():
+        print(idx, row)
+        
+    print(f'Runtime: {dt.now() - start}')

@@ -51,56 +51,59 @@ def plot_utilization(df, name, predict_input):
     
     
     # add trace for average, show predicted on hover
-    fig.add_trace(go.Scatter(
-        y=idf['Avg Utilization'],
-        x=idf['DT'],
-        name='Average Utilization',
-        line=dict(color=green, shape='spline'),
-        mode='lines',
-        hovertemplate='%{y:%f}',
-        showlegend=False
-    ))
+    for sy in idf['Strategy Year'].unique():
+        filt = idf['Strategy Year'] == sy
+        dff = idf.loc[filt]
+        fig.add_trace(go.Scatter(
+            y=dff['Avg Utilization'],
+            x=dff['DT'],
+            name='Average Utilization',
+            line=dict(color=green, shape='spline'),
+            mode='lines',
+            hovertemplate='%{y:%f}',
+            showlegend=False
+        ))
     
-    # add trace for predicted meh
-    fig.add_trace(go.Scatter(
-        y=idf['Avg FTE'],
-        x=idf['DT'],
-        name='Average FTE',
-        line=dict(color=light_grey, shape='spline'),
-        mode='lines',
-        hovertemplate='%{y:%f}',
-        showlegend=False
-    ))
+        # add trace for predicted meh
+        fig.add_trace(go.Scatter(
+            y=dff['Avg FTE'],
+            x=dff['DT'],
+            name='Average FTE',
+            line=dict(color=light_grey, shape='spline'),
+            mode='lines',
+            hovertemplate='%{y:%f}',
+            showlegend=False
+        ))
     
-    # add trace for actual
-    fig.add_trace(go.Scatter(
-        y=idf.loc[filt, 'Util to Date'],
-        x=idf.loc[filt, 'DT'],
-        name='Predicted Utilization',
-        line=dict(color=green, shape='spline'),
-        mode='markers+text',
-        text=idf['Util to Date'],
-        textposition='top right',
-        texttemplate='%{y:%f}',
-        hoverinfo='skip',
-        cliponaxis=False,
-        showlegend=False
-    ))
+        # add trace for actual
+        fig.add_trace(go.Scatter(
+            y=dff.loc[filt, 'Util to Date'],
+            x=dff.loc[filt, 'DT'],
+            name='Predicted Utilization',
+            line=dict(color=green, shape='spline'),
+            mode='markers+text',
+            text=dff['Util to Date'],
+            textposition='top right',
+            texttemplate='%{y:%f}',
+            hoverinfo='skip',
+            cliponaxis=False,
+            showlegend=False
+        ))
     
-    # add trace for MEH
-    fig.add_trace(go.Scatter(
-        y=idf.loc[filt, 'FTE to Date'],
-        x=idf.loc[filt, 'DT'],
-        name='MEH',
-        line=dict(color='darkgrey', shape='spline'),
-        mode='markers+text',
-        text=idf['Util to Date'],
-        textposition='top right',
-        texttemplate='%{y:%f}',
-        hoverinfo='skip',
-        cliponaxis=False,
-        showlegend=False
-    ))
+        # add trace for MEH
+        fig.add_trace(go.Scatter(
+            y=dff.loc[filt, 'FTE to Date'],
+            x=dff.loc[filt, 'DT'],
+            name='MEH',
+            line=dict(color='darkgrey', shape='spline'),
+            mode='markers+text',
+            text=dff['Util to Date'],
+            textposition='top right',
+            texttemplate='%{y:%f}',
+            hoverinfo='skip',
+            cliponaxis=False,
+            showlegend=False
+        ))
     
     # add 'x' for this month's actuals
     filt = idf['DT'] == max_DT
@@ -144,8 +147,8 @@ def plot_utilization(df, name, predict_input):
                      fixedrange=True)
     
     # Update xaxes
-    fig.update_xaxes(range=[(pd.to_datetime('2020' + 'Mar' + '26', format='%Y%b%d')),
-                            pd.to_datetime('2021' + 'Mar', format='%Y%b')],
+    fig.update_xaxes(range=[(pd.to_datetime('2021' + 'Mar' + '26', format='%Y%b%d')),  #TODO
+                            pd.to_datetime('2022' + 'Mar', format='%Y%b')],
                      nticks=12,
                      tickformat='%b<br>%Y',
                      linecolor=light_grey,
@@ -156,12 +159,12 @@ def plot_utilization(df, name, predict_input):
     fig.update_layout(margin=dict(l=10, r=150, t=20, pad=4))
                       
     # Add predicted utilization annotation
-    filt = idf['DT'] == pd.to_datetime('2021' + 'Mar', format='%Y%b')
+    filt = idf['DT'] == pd.to_datetime('2022' + 'Mar', format='%Y%b')  #TODO
     predicted = idf.loc[filt, 'Avg Utilization']
     if not predicted.empty:
         predict_display = predicted.values[0]
         predict_text = f'Predicted<br>Utilization ({predict_display*100:.0f}%)'
-        fig.add_annotation(x=pd.to_datetime('2021' + 'Mar', format='%Y%b'),
+        fig.add_annotation(x=pd.to_datetime('2022' + 'Mar', format='%Y%b'),
                         y=predict_display,
                         text=predict_text,
                         xanchor='left',
@@ -194,11 +197,12 @@ def plot_utilization(df, name, predict_input):
 def plot_projects(df, name, start_date, end_date, mode, project=None):
     # subset df and entries by user
     idf = df[df['User Name'] == name].copy()
+    meh = utils.get_meh_from_entries(idf, start_date, end_date)
     bar_width = .7
     fig = go.Figure()
 
     if mode == 'Projects':
-        project_totals = functions.get_project_totals(idf, start_date, end_date)
+        project_totals = utils.get_project_totals(idf, start_date, end_date)
 
         fig.add_traces(go.Bar(
             x=project_totals,
@@ -212,7 +216,7 @@ def plot_projects(df, name, start_date, end_date, mode, project=None):
         bars = project_totals
 
     elif mode == 'Tasks':
-        task_totals = functions.get_task_totals(idf, start_date, end_date, project)
+        task_totals = utils.get_task_totals(idf, start_date, end_date, project)
         task_totals
 
         fig.add_traces(go.Bar(
@@ -225,6 +229,82 @@ def plot_projects(df, name, start_date, end_date, mode, project=None):
         ))
 
         bars = task_totals
+
+    # Add hours annotation
+    for idx, hours in enumerate(bars):
+        if hours > 0:
+            fig.add_annotation(
+                x=0, y=idx,
+                xanchor='right',
+                text=f'{hours:,.1f}',
+                font_color=text_grey,
+                showarrow=False
+            )
+    
+    # Add fte annotation
+    for idx, hours in enumerate(bars):
+        if hours > 0:
+            fig.add_annotation(
+                x=hours, y=idx,
+                xanchor='left',
+                text=f'{hours/meh:.0%}',
+                font_color=text_grey,
+                showarrow=False
+            )
+
+    # Update layout
+    num_bars = len(bars)
+    bottom_margin = 200 if num_bars < 5 else 80
+    fig.update_layout(plot_bgcolor='white',
+                      xaxis_showgrid=True,
+                      yaxis_showgrid=False,
+                      autosize=False,
+                      height=(num_bars-1) * 40 + (60 + bottom_margin)
+                      )
+
+    # Add space for Calendar drop down
+    fig.update_layout(margin=dict(l=0, r=0, t=20, b=bottom_margin, pad=30))
+
+    # Update font
+    fig.update_layout(font=dict(family='Gill Sans MT, Arial', 
+                                size=14, color=text_grey))
+
+    return fig
+
+
+def plot_team(df, project, start_date, end_date, mode, user=None):
+    # subset df and entries by user
+    pdf = df[df['Project'] == project].copy()
+    bar_width = .7
+    fig = go.Figure()
+
+    if mode == 'Users':
+        user_totals = utils.get_user_totals(pdf, start_date, end_date)
+
+        fig.add_traces(go.Bar(
+            x=user_totals,
+            y=user_totals.index,
+            name='Users',
+            orientation = 'h',
+            width=bar_width,
+            showlegend=False
+        ))
+
+        bars = user_totals
+
+    elif mode == 'Tasks':
+        user_task_totals = utils.get_user_task_totals(pdf, start_date, end_date, user)
+
+        fig.add_traces(go.Bar(
+            x=user_task_totals,
+            y=user_task_totals.index,
+            name='Tasks',
+            orientation = 'h',
+            width=bar_width,
+            showlegend=False
+        ))
+
+        bars = user_task_totals
 
     # Add hours annotation
     for idx, hours in enumerate(bars):

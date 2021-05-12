@@ -5,22 +5,14 @@ import dash_daq as daq
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from flask import request
+from datetime import datetime as dt
 import json
 import pandas as pd
 
-from components.utils import auth_gspread, load_report
 from components import visualizations
+from apps.common import usernames, hours_report, hours_entries
+
 from app import app
-from apps.navbar import navbar
-
-### ----------------------------- SETUP ---------------------------------- ###
-
-client = auth_gspread()
-hours_report = load_report(client, 'hours-entries', '2020-table')
-hours_report['DT'] = pd.to_datetime(hours_report['DT'])
-with open('components/usernames.json') as f:
-    usernames = json.load(f)
-
 
 ### ----------------------------- LAYOUT --------------------------------- ###
 
@@ -63,7 +55,7 @@ drop_downs = dbc.Container(
 )
 
 ### RESET CHART ###
-reset_chart = dbc.Button("Reset", id='reset-axes',
+reset_chart = dbc.Button("Back", id='reset-axes',
             color='secondary', 
             outline=True, size='sm')
 
@@ -107,11 +99,13 @@ utilization_display = dbc.Row(
             ], justify='center', align='center'
         )
 
+
 ### VALID THRU ###
 valid_thru = dbc.Container(html.Div(id='valid-thru'),
                            style={'fontFamily': 'Gill Sans MT, Arial',
                                   'fontSize': 16,
                                   'textAlign': 'left'})
+
 
 ### UPDATE TRIGGER ###
 fire_me = html.Div(id='fire', children=[], style={'display': 'none'})
@@ -122,7 +116,6 @@ a name
 
 ### LAYOUT ###
 layout = html.Div([
-    navbar,
     dbc.Container(instruction_text),
     drop_downs,
     html.Br(),
@@ -166,3 +159,23 @@ def update_utilization_chart(name, predict_input, n_clicks):
             )
     else:
         raise PreventUpdate
+
+
+# UPDATE VALID THROUGH TEXT ###
+def _get_last_valid_date(name):
+    """returns last valid date as datetime"""
+    filt = ((hours_entries['User Name'] == name) 
+            & (hours_entries['Hours Date'] <= dt.today()))
+    current_hours = hours_entries.loc[filt, 'Hours Date']
+    max_DT = current_hours.max()
+    return max_DT
+
+@app.callback(
+    Output('valid-thru', 'children'),
+    [Input('select-name', 'value')]
+)
+def get_valid_thru(name):
+    max_DT = _get_last_valid_date(name)
+    max_DT_s = max_DT.strftime('%A, %B %e, %Y')
+    text = f'Data valid through: {max_DT_s}'
+    return text
