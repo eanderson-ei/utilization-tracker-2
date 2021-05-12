@@ -13,12 +13,11 @@ from app import app
 
 client = auth_gspread()
 # load hours report
-print('loading reports')
 hours_report = pd.concat([
     load_report(client, 'hours-entries', '2021-table'),
-    load_report(client, 'hours-entries', '2020-table'),
-    load_report(client, 'hours-entries', '2019-table')
-])
+    load_report(client, 'hours-entries', '2020-table')
+    # load_report(client, 'hours-entries', '2019-table')
+])  #TODO Exceeds memory of 550Mb
 hours_report['DT'] = pd.to_datetime(hours_report['DT'])
 
 # load usernames
@@ -28,8 +27,8 @@ with open('components/usernames.json') as f:
 # load hours entries
 hours_entries = pd.concat([
     load_report(client, 'hours-entries', '2021-hours'),
-    load_report(client, 'hours-entries', '2020-hours'),
-    load_report(client, 'hours-entries', '2019-hours')
+    load_report(client, 'hours-entries', '2020-hours')
+    # load_report(client, 'hours-entries', '2019-hours')
 ])
 hours_entries['Hours Date'] = pd.to_datetime(hours_entries['Hours Date'])
 
