@@ -14,10 +14,28 @@ Conda environment: utilization-report-2
 
 - [x] Add % to My Projects to see time spent relative to MEH
 - [ ] Add compare to planned to see time spent relative to planned (allocation table)
-- [x] Change date range in My Projects from today's month to last valid date's month
+- [ ] Change date range in My Projects from today's month to last valid date's month
+- [ ] Describe FTE % in instructions under My Projects
+- [ ] Make name selector the same object across My Utilization and My Proj
 - [x] Format hours in Entries table to floats rather than strings
 - [x] Clear click data when selecting new employee in Projects chart
-- [ ] Fix employee name store when two or more people are in the app (use session variable in Flask instead of dcc.Store).
+- [ ] Fix employee name store when two or more people are in the app (use session variable in Flask instead of dcc.Store)
+- [ ] Export Time Entries
+- [ ] Migrate to postgres database
+- [ ] Restrict select-projects in My Teams to date range specified
+
+*Long term*
+
+- [ ] Record video tutorial for use, create instructions tab with embedded video and
+  - [ ] Clarity around how utilization is calculated
+  - [ ] Clarity around what goes into utilization
+- [ ] Refresh google sheets on page refresh (see [video 2](https://www.youtube.com/watch?v=Mf3s0P4aVKw))
+- [ ] Refactor code based on example (see next up list in OneNote)
+- [ ] loop through Strategy Year to calculate average utilization (check for lag)
+- [x] Ask JS if we want to weight FTE for employee type (standard or part time), now no: leads to very high FTEs for employees who are part time and work full time, seems confusing too and not consistent across utilization and fte
+- [ ] Add allocation table
+- [ ] Build portfolio view (utilization)
+- [x] Build team view (filled area chart bulk effort over time, hours by person h-bar for specified time period)
 - [ ] Add allocation table
   - [x] Add all months to table display
   - [x] Sort months
@@ -36,29 +54,6 @@ Conda environment: utilization-report-2
   - [ ] Add total row (by-project)
   - [ ] Connect to my projects
   - [ ] fix total column 'Project' key error
-- [x] Set calendar min to April 2020
-- [ ] Export Time Entries
-- [x] Notebook predict_utilization and optimize
-- [x] Remove hardcoded meh lookup
-- [x] Concatenate all hour reports and hours entries
-- [x] Check performance of data loaded from sheets, if poor replace with sql calls on database (use date-picker and select-name as inputs to sql call)
-- [ ] Copy compile_hours notebook to compile_hours script
-- [ ] Run with new data
-- [ ] Test & deploy
-
-*Long term*
-
-- [ ] Record video tutorial for use, create instructions tab with embedded video and
-  - [ ] Clarity around how utilization is calculated
-  - [ ] Clarity around what goes into utilization
-- [ ] Refresh google sheets on page refresh (see [video 2](https://www.youtube.com/watch?v=Mf3s0P4aVKw))
-- [ ] Refactor code based on example (see next up list in OneNote)
-- [ ] loop through Strategy Year to calculate average utilization (check for lag)
-- [x] Ask JS if we want to weight FTE for employee type (standard or part time), now no: leads to very high FTEs for employees who are part time and work full time, seems confusing too and not consistent across utilization and fte
-- [ ] Add allocation table
-- [ ] Build portfolio view (utilization)
-- [x] Build team view (filled area chart bulk effort over time, hours by person h-bar for specified time period)
-- [ ] 
 
 ##### Deltek Changes to Request
 
