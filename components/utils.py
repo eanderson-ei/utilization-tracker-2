@@ -104,7 +104,7 @@ def predict_utilization(idf, predict_input):
                                + pdf['Entry Month'], 
                                format='%Y%b')
     pdf['MEH'] = pdf['DT'].apply(
-        lambda x: 8 * len(pd.bdate_range(x, x + pd.offsets.MonthBegin(1)))
+        lambda x: 8 * len(pd.bdate_range(x, x + pd.offsets.MonthEnd(0)))
     )
     # pdf['MEH'] = 8 * np.busday_count(
     #     pdf['DT'].dt.date, pdf['DT'].dt.date + relativedelta(months=1)

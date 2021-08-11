@@ -141,7 +141,7 @@ def update_logins(e_df):
     with open('secrets/passwords.json', 'r+') as f:
         existing_emp = json.load(f)
         for key in pass_dict.keys():
-            if key and not key in existing_emp and not np.isnan(key):
+            if key and not key in existing_emp and key != np.nan:
                 print(f'UPDATE ENV VAR: {key} IS NEW!')
         f.seek(0)
         json.dump(pass_dict, f, indent=4)
@@ -243,14 +243,14 @@ def pivot_idf(idf):
 
 def add_meh(idf_pivot, first_last):
     idf_pivot['MEH'] = idf_pivot['DT'].apply(
-        lambda x: 8 * len(pd.bdate_range(x, x + pd.offsets.MonthBegin(1)))
+        lambda x: 8 * len(pd.bdate_range(x, x + pd.offsets.MonthEnd(0)))
     )
 
     # correct for employees who start in middle of the period
     first_month_worked = first_last[0].strftime('%b')
     first_year_worked = first_last[0].strftime('%Y')
 
-    first_month_MEH = 8 * len(pd.bdate_range(first_last[0], first_last[0] + pd.offsets.MonthBegin(1)))
+    first_month_MEH = 8 * len(pd.bdate_range(first_last[0], first_last[0] + pd.offsets.MonthEnd(0)))
 
     idf_pivot.at[(first_year_worked, first_month_worked), 'MEH'] = first_month_MEH
     
@@ -260,7 +260,7 @@ def add_meh(idf_pivot, first_last):
 def calc_utilization(idf_pivot, first_last):
     # Calculate meh_hours_to_date
     fte_remaining = 8 * len(pd.bdate_range(
-        first_last[1] + pd.offsets.Day(1), first_last[1] + pd.offsets.MonthBegin(1)))
+        first_last[1] + pd.offsets.Day(1), first_last[1] + pd.offsets.MonthEnd(0)))
     last_month_worked = first_last[1].strftime('%b')
     last_year_worked = first_last[1].strftime('%Y')
     meh_hours = idf_pivot.loc[(last_year_worked, last_month_worked), 'MEH']
@@ -314,7 +314,7 @@ if __name__ == '__main__':
     tess_fn = get_latest_file(downloads, tess_file)
 
     # read employees to dataframe
-    employeeWS_df = pd.read_excel(tess_fn, employees_sheet)
+    employeeWS_df = pd.read_excel(tess_fn, employees_sheet, engine='openpyxl')
 
     # filter out Employee IDs < 100000
     filt = employeeWS_df['Employee ID'] > 100000
@@ -347,7 +347,7 @@ if __name__ == '__main__':
     update_logins(e_df)
 
     # Read hours entries
-    hours_entries = pd.read_excel(tess_fn, hours_entries_sheet)
+    hours_entries = pd.read_excel(tess_fn, hours_entries_sheet, engine='openpyxl')
 
     # Read hours entries
     # Deltek adds rows for long comments and merges cells (why are they like this?)
@@ -381,28 +381,32 @@ if __name__ == '__main__':
     projects_fn = get_latest_file(downloads, funded_actuals_file)
 
     # read employees to dataframe
-    projects_df = pd.read_excel(projects_fn, projects_sheet)
+    projects_df = pd.read_excel(projects_fn, projects_sheet, engine='openpyxl')
 
     # remove whitespace
     projects_df['Project Name'] = projects_df['Project Name'].str.strip()
     projects_df['Organization Name'] = projects_df['Organization Name'].str.strip()
-
-    # Save projects to Google Sheets
-    save_to_gs(projects_df, client, deltek_info_sh, projects_wks)
-
-    # Join projects to hours_entries
+    
     # filter projects to Level 1 only
-    filt = projects_df['Level Number'] == str(1)
-    projects_df = projects_df.loc[filt, ['Project ID', 'Project Name']].copy()
+    filt = (projects_df['Level Number'] == 1) | (projects_df['Level Number'] == str(1))
+    level_one_df = projects_df.loc[filt, ['Project ID', 'Project Name']].copy()
 
     # check for uniqueness of project id
-    assert len(projects_df) == len(projects_df['Project ID'].unique()), "Check for duplicate project IDs at Level 1"
+    print(len(level_one_df), len(level_one_df['Project ID'].unique()))
+    assert len(level_one_df) == len(level_one_df['Project ID'].unique()), "Check for duplicate project IDs at Level 1"
 
     # convert to dictionary with keys as strings
-    projects_df = projects_df.set_index('Project ID')
-    project_dict = projects_df['Project Name'].to_dict()
+    level_one_df = level_one_df.set_index('Project ID')
+    project_dict = level_one_df['Project Name'].to_dict()
     project_dict = {str(key): str(value) for key, value in project_dict.items()}
 
+    # add project column to project_df
+    projects_df['Project'] = projects_df['Project ID'].str[:4].replace(project_dict)
+    
+    # Save projects to Google Sheets
+    save_to_gs(projects_df, client, deltek_info_sh, projects_wks)
+    
+    # Join projects to hours_entries
     hours_entries['Project'] = hours_entries['Task ID'].str[:4].replace(project_dict)
 
     # update 'Indirect' Projects to Classification
@@ -428,23 +432,25 @@ if __name__ == '__main__':
         # Build timetable for each employee
         idf = get_idv_hours_entries(hours_entries, name)
         
-        # get first and last day worked
-        first_last = get_first_last(idf)
+        if not idf.empty:
         
-        # pivot individual hours
-        idf_pivot = pivot_idf(idf)
+            # get first and last day worked
+            first_last = get_first_last(idf)
+            
+            # pivot individual hours
+            idf_pivot = pivot_idf(idf)
 
-        # add meh
-        idf_pivot = add_meh(idf_pivot, first_last)
-        
-        # calc utilization
-        idf_pivot = calc_utilization(idf_pivot, first_last)
-        
-        # associate name with record
-        idf_pivot['User Name'] = name
-        idf_pivot = idf_pivot.reset_index()
-        
-        timetable_list.append(idf_pivot)
+            # add meh
+            idf_pivot = add_meh(idf_pivot, first_last)
+            
+            # calc utilization
+            idf_pivot = calc_utilization(idf_pivot, first_last)
+            
+            # associate name with record
+            idf_pivot['User Name'] = name
+            idf_pivot = idf_pivot.reset_index()
+            
+            timetable_list.append(idf_pivot)
         
     # concat all timetables
     timetables = pd.concat(timetable_list)
