@@ -461,15 +461,15 @@ if __name__ == '__main__':
 
     ### CHECKS ###
 
-    # check for 40 hours per week
-    hours_entries_week = hours_entries.copy()
-    hours_entries_week['week'] = hours_entries_week['Hours Date'].dt.isocalendar().week
-    filt = hours_entries_week['Classification'] == 'Billable'
-    weekly_hours = hours_entries_week.loc[filt].groupby(['User Name','Entry Year', 'Entry Month', 'week'])['Entered Hours'].sum()
-    filt = weekly_hours > 40
+    # # check for 40 hours per week
+    # hours_entries_week = hours_entries.copy()
+    # hours_entries_week['week'] = hours_entries_week['Hours Date'].dt.isocalendar().week
+    # filt = hours_entries_week['Classification'] == 'Billable'
+    # weekly_hours = hours_entries_week.loc[filt].groupby(['User Name','Entry Year', 'Entry Month', 'week'])['Entered Hours'].sum()
+    # filt = weekly_hours > 40
 
-    print('The following employees have worked more than 40 billable hours in a week:\n')
-    for idx, row in weekly_hours.loc[filt].iteritems():
-        print(idx, row)
+    # print('The following employees have worked more than 40 billable hours in a week:\n')
+    # for idx, row in weekly_hours.loc[filt].iteritems():
+    #     print(idx, row)
         
     print(f'Runtime: {dt.now() - start}')
