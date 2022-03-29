@@ -421,6 +421,9 @@ if __name__ == '__main__':
     filt = hours_entries['Classification'] == 'Time Off'
     hours_entries.loc[filt, 'Task Name'] = 'Time Off'
     hours_entries.loc[filt, 'Comments'] = ''
+    
+    # categorize null Classifications (when an old timecode is removed from the system)
+    hours_entries['Classification'] = hours_entries['Classification'].fillna('None')
 
     # save hours entries to google sheets
     save_to_gs(hours_entries, client, hours_entries_sh, current_hours_wks)

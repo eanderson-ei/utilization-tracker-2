@@ -29,10 +29,11 @@ def plot_utilization(df, name, predict_input):
                 'G&A': '#909497', 
                 'Marketing & NBD': '#2E9DCD', 
                 'Overhead': '#1F73AE',
-                'Time Off': '#F1C40F'}
+                'Time Off': '#F1C40F',
+                'None': '#333333'}
     
     for classifier in ['Billable', 'R&D', 'G&A', 'Marketing & NBD', 
-                        'Overhead', 'Time Off']:
+                        'Overhead', 'Time Off', 'None']:
         color = colors.get(classifier, '#000000')
         fig.add_trace(go.Scatter(
             y=idf.loc[filt, classifier]/idf.loc[filt, 'MEH'],
