@@ -112,8 +112,14 @@ def predict_utilization(idf, predict_input):
     
     
     # add predicted values 
-    pdf['Predicted Billable'] = pdf['MEH'] * predicted_utilization
-    pdf['Predicted Total'] = pdf['MEH'] * predicted_fte
+    if not pdf.empty:
+        pdf['Predicted Billable'] = pdf['MEH'] * predicted_utilization
+        pdf['Predicted Total'] = pdf['MEH'] * predicted_fte
+    else:
+        pdf['Predicted Billable'] = pd.Series([])
+        pdf['Predicted Total'] = pd.Series([])
+    
+    print(pdf)
     
     # append to idf
     idf = idf.append(pdf, ignore_index=True)
