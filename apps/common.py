@@ -21,8 +21,9 @@ hours_report = pd.concat([
 hours_report['DT'] = pd.to_datetime(hours_report['DT'])
     
 # load usernames
-with open('components/usernames.json') as f:
-    usernames = json.load(f)
+try:
+    with open('components/usernames.json') as f:
+        usernames = json.load(f)
 # Heroku dev
 except:
     json_users = os.environ.get("VALID_USERNAMES")
