@@ -119,8 +119,6 @@ def predict_utilization(idf, predict_input):
         pdf['Predicted Billable'] = pd.Series([])
         pdf['Predicted Total'] = pd.Series([])
     
-    print(pdf)
-    
     # append to idf
     idf = idf.append(pdf, ignore_index=True)
     idf.fillna(0, inplace=True)

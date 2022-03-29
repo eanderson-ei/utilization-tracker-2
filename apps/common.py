@@ -19,10 +19,14 @@ hours_report = pd.concat([
     # load_report(client, 'hours-entries', '2019-table')
 ])  #TODO Exceeds memory of 550Mb
 hours_report['DT'] = pd.to_datetime(hours_report['DT'])
-
+    
 # load usernames
 with open('components/usernames.json') as f:
     usernames = json.load(f)
+# Heroku dev
+except:
+    json_users = os.environ.get("VALID_USERNAMES")
+    usernames = json.loads(json_users)
 
 # load hours entries
 hours_entries = pd.concat([

@@ -80,26 +80,17 @@ Conda environment: utilization-report-2
 
       1. copy `passwords.json` into the Environment Variables Config at heroku for this app
 
-      2. commit the updated `usernames.json` file to git and heroku
-
-         ```bash
-         git pull
-         git add compnents/usernames.json
-         git commit -m "add new user"
-         git push origin master
-         git push heroku master
-         ```
-
-         
-
    2. If a project was billed against but is not in the projects table on Deltek, a CSV will be saved out to `data/` showing which entries were missed. Manually add this project to the code (where Chad's project was added)
 
 5. Restart the app (to load changes to the Google Sheet)
 
    Run `heroku restart` from the root project folder
 
-5. Update [2020 Utilization Tool](https://enviroincentives.sharepoint.com/:x:/g/EbRNKr-tEV9LvtWtuY1IoMMBpsYHU_kI2C1p1jADsxhofA?e=BcvEhC) by copying form `data/hours_report` into 'hours_report' tab
-6. Refresh both graphs, , change 'Updated' text
+6. Update [2020 Utilization Tool](https://enviroincentives.sharepoint.com/:x:/g/EbRNKr-tEV9LvtWtuY1IoMMBpsYHU_kI2C1p1jADsxhofA?e=BcvEhC) by copying form `data/hours_report` into 'hours_report' tab
+
+7. Refresh both graphs, , change 'Updated' text
+
+to Update
 
 **Requirements**
 
@@ -109,17 +100,16 @@ Conda environment: utilization-report-2
 
 **To deploy changes:**
 
-1. Commit changes to github
+1. Commit changes to github and herok
 
-   `git commit -am "<message>"`
+```bash
+git pull
+git add compnents/usernames.json
+git commit -m "add new user"
+git push origin master
+git push heroku master
+```
 
-   `git pull`
-
-   `git push origin master`
-
-2. Push changes heroku:
-
-   `git push heroku master`
 
 #### To update scoreboard database
 
