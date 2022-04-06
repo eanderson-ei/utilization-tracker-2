@@ -374,14 +374,19 @@ if __name__ == '__main__':
     codes_df = codes_df.set_index('User Defined Code 3')
     codes_dict = codes_df['Code'].to_dict()
 
-    # replace User defined codes with Coes
-    hours_entries['Classification'] = hours_entries['User Defined Code 3'].replace(codes_dict)
-
     # locate Cognos report from TESS
     projects_fn = get_latest_file(downloads, funded_actuals_file)
 
     # read employees to dataframe
     projects_df = pd.read_excel(projects_fn, projects_sheet, engine='openpyxl')
+    
+    # replace User defined codes with Codes
+    account_group_df = projects_df[['Project ID', 'Account Group']].set_index('Project ID')
+    account_dict = account_group_df['Account Group'].to_dict()
+    hours_entries['Account Group'] = hours_entries['Task ID'].replace(account_dict)
+    hours_entries['Classification'] = hours_entries['Account Group'].replace(codes_dict)
+    
+    hours_entries = hours_entries.drop('Account Group', axis=1)
 
     # remove whitespace
     projects_df['Project Name'] = projects_df['Project Name'].str.strip()
