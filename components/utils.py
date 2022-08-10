@@ -134,7 +134,7 @@ def predict_utilization(idf, predict_input):
     idf['Strategy Year'] = idf.apply(strategy_year, axis=1)
     
     # populate predicted columns
-    filt = idf['DT'] >= pd.to_datetime(pd.to_datetime('2019' + 'Apr',  #TODO 
+    filt = idf['DT'] >= pd.to_datetime(pd.to_datetime('2022' + 'Apr',  #TODO 
                                                       format='%Y%b'))
     idf.loc[filt, 'Predicted Billable'] = (idf.loc[filt, 'Predicted Billable'] 
                                            + idf.loc[filt, 'Billable'])

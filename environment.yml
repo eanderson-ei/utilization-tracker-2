@@ -1,4 +1,4 @@
-name: utilization-report-2
+name: utilization-tracker-2
 channels:
   - conda-forge
   - defaults
@@ -74,5 +74,5 @@ dependencies:
     - urllib3==1.25.9
     - webcolors==1.11.1
     - xlrd==1.2.0
-prefix: C:\Users\Erik\Anaconda3\envs\utilization-report-2
+prefix: C:\Users\Erik\Anaconda3\envs\utilization-tracker-2
 

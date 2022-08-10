@@ -2,8 +2,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 # see https://community.plot.ly/t/nolayoutexception-on-deployment-of-multi-page-dash-app-example-code/12463/2?u=dcomfort
-from app import server
-from app import app
+from app import server, app
 from apps import utilization, projects, team
 from apps.common import navbar
 

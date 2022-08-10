@@ -148,8 +148,8 @@ def plot_utilization(df, name, predict_input):
                      fixedrange=True)
     
     # Update xaxes
-    fig.update_xaxes(range=[(pd.to_datetime('2021' + 'Mar' + '26', format='%Y%b%d')),  #TODO
-                            pd.to_datetime('2022' + 'Mar', format='%Y%b')],
+    fig.update_xaxes(range=[(pd.to_datetime('2022' + 'Mar' + '26', format='%Y%b%d')),  #TODO
+                            pd.to_datetime('2023' + 'Mar', format='%Y%b')],
                      nticks=12,
                      tickformat='%b<br>%Y',
                      linecolor=light_grey,
@@ -160,12 +160,12 @@ def plot_utilization(df, name, predict_input):
     fig.update_layout(margin=dict(l=10, r=150, t=20, pad=4))
                       
     # Add predicted utilization annotation
-    filt = idf['DT'] == pd.to_datetime('2022' + 'Mar', format='%Y%b')  #TODO
+    filt = idf['DT'] == pd.to_datetime('2023' + 'Mar', format='%Y%b')  #TODO
     predicted = idf.loc[filt, 'Avg Utilization']
     if not predicted.empty:
         predict_display = predicted.values[0]
         predict_text = f'Predicted<br>Utilization ({predict_display*100:.0f}%)'
-        fig.add_annotation(x=pd.to_datetime('2022' + 'Mar', format='%Y%b'),
+        fig.add_annotation(x=pd.to_datetime('2023' + 'Mar', format='%Y%b'),
                         y=predict_display,
                         text=predict_text,
                         xanchor='left',
@@ -173,7 +173,7 @@ def plot_utilization(df, name, predict_input):
                         xshift=10,
                         showarrow=False,
                         align='left'
-        )
+        )  ## TODO
     
     # Update font
     fig.update_layout(font=dict(family='Gill Sans MT, Arial', 

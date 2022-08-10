@@ -22,15 +22,15 @@ app.server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # app.server.config["SQLALCHEMY_DATABASE_URI"] = "postgresql://postgres:Sup249249*@localhost/test"
 
 # db connection for heroku
-try:
-    app.server.config["SQLALCHEMY_DATABASE_URI"] = os.environ['DATABASE_URL']
-    app.server.debug = False
-except:
-    with open ('secrets/database_uri.json') as f:
-        app.server.config["SQLALCHEMY_DATABASE_URI"] = json.load(f).get("DATABASE_URI")
-    app.server.debug = True
+# try:
+#     app.server.config["SQLALCHEMY_DATABASE_URI"] = os.environ['DATABASE_URL']
+#     app.server.debug = False
+# except:
+#     with open ('secrets/database_uri.json') as f:
+#         app.server.config["SQLALCHEMY_DATABASE_URI"] = json.load(f).get("DATABASE_URI")
+#     app.server.debug = True
     
-db = SQLAlchemy(app.server)
+# db = SQLAlchemy(app.server)
 
 
 # Keep this out of source code repository - save in a file or a database
