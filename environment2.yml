@@ -1,4 +1,4 @@
-name: utilization-report-2
+name: utilization-tracker-2
 channels:
   - conda-forge
   - defaults
@@ -32,4 +32,4 @@ dependencies:
   - yaml==0.2.5=he774522_0
   - flask-compress==1.5.0=pyh9f0ad1d_0
   - pandas
-prefix: C:\Users\Erik\miniconda3\envs\utilization-report-2
+prefix: C:\Users\Erik\miniconda3\envs\utilization-tracker-2
