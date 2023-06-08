@@ -2,7 +2,7 @@ from dash import dcc
 from dash import html
 from dash.dependencies import Input, Output
 # see https://community.plot.ly/t/nolayoutexception-on-deployment-of-multi-page-dash-app-example-code/12463/2?u=dcomfort
-from app import app  # , server
+from app import app, server
 from apps import utilization, projects, team, forecasts
 from apps.common import navbar
 
