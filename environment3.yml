@@ -1,0 +1,22 @@
+name: utilization-tracker-3
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - colorlover
+  - dash
+  - dash-auth
+  - dash-bootstrap-components
+  - dash-core-components
+  - dash-daq
+  - dash-html-components
+  - dash-table
+  - Flask
+  - gunicorn
+  - numpy 
+  - pandas 
+  - plotly 
+  - pygsheets
+  - webcolors
+  - xlrd
+prefix: C:\Users\Erik\miniconda3\envs\utilization-tracker-3
