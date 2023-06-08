@@ -1,9 +1,8 @@
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-import dash_table
 
 from apps.common import forecasts
 from components import visualizations
@@ -19,8 +18,7 @@ from app import app
 instruction_text = [
     "Visualize level of effort forecasts from the Resource Planning process.",
     html.Br(), html.Br(),
-    html.B("Select your name from the dropdown menu. "
-           "Click 'Back' to start over."),
+    html.B("Select your name from the dropdown menu"),
     html.Br(), html.Br()
 ]
 

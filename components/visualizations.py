@@ -46,6 +46,7 @@ def plot_utilization(df, name, predict_input):
             stackgroup='classes',
             hoveron='points', # fills not working
             hoverinfo='text+y',
+            hovertemplate='%{y:.0%}',
             text=classifier,
             showlegend=True
             ))
@@ -61,7 +62,7 @@ def plot_utilization(df, name, predict_input):
             name='Average Utilization',
             line=dict(color=green, shape='spline'),
             mode='lines',
-            hovertemplate='%{y:%f}',
+            hovertemplate='%{y:.0%}',
             showlegend=False
         ))
     
@@ -72,7 +73,7 @@ def plot_utilization(df, name, predict_input):
             name='Average FTE',
             line=dict(color=light_grey, shape='spline'),
             mode='lines',
-            hovertemplate='%{y:%f}',
+            hovertemplate='%{y:.0%}',
             showlegend=False
         ))
     
@@ -85,7 +86,7 @@ def plot_utilization(df, name, predict_input):
             mode='markers+text',
             text=dff['Util to Date'],
             textposition='top right',
-            texttemplate='%{y:%f}',
+            texttemplate='%{y:.0%}',
             hoverinfo='skip',
             cliponaxis=False,
             showlegend=False
@@ -100,7 +101,7 @@ def plot_utilization(df, name, predict_input):
             mode='markers+text',
             text=dff['Util to Date'],
             textposition='top right',
-            texttemplate='%{y:%f}',
+            texttemplate='%{y:.0%}',
             hoverinfo='skip',
             cliponaxis=False,
             showlegend=False
@@ -115,7 +116,7 @@ def plot_utilization(df, name, predict_input):
         mode='markers',
         marker=dict(symbol='x-thin', 
                     line=dict(color=green, width=1)),
-        hovertemplate='%{y:%f}',
+        hovertemplate='%{y:.0%}',
         line_color=green,
         showlegend=False
     ))
@@ -127,7 +128,7 @@ def plot_utilization(df, name, predict_input):
         mode='markers',
         marker=dict(symbol='x-thin', 
                     line=dict(color='darkgrey', width=1)),
-        hovertemplate='%{y:%f}',
+        hovertemplate='%{y:.0%}',
         line_color='darkgrey',
         showlegend=False
     ))
@@ -143,7 +144,7 @@ def plot_utilization(df, name, predict_input):
     
     # Update yaxes
     fig.update_yaxes(rangemode='tozero',
-                     tickformat='%',
+                     tickformat='.0%',
                      range=[0,1.39],
                      fixedrange=True)
     
@@ -176,7 +177,7 @@ def plot_utilization(df, name, predict_input):
         )  ## TODO
     
     # Update font
-    fig.update_layout(font=dict(family='Gill Sans MT, Arial', 
+    fig.update_layout(font=dict(family='Calibri, Arial', 
                                 size=14, color=text_grey))
     
     # update legend and increase graph height and margins to accomodate with slider
@@ -267,7 +268,7 @@ def plot_projects(df, name, start_date, end_date, mode, project=None):
     fig.update_layout(margin=dict(l=0, r=0, t=20, b=bottom_margin, pad=30))
 
     # Update font
-    fig.update_layout(font=dict(family='Gill Sans MT, Arial', 
+    fig.update_layout(font=dict(family='Calibri, Arial', 
                                 size=14, color=text_grey))
 
     return fig
@@ -332,7 +333,7 @@ def plot_team(df, project, start_date, end_date, mode, user=None):
     fig.update_layout(margin=dict(l=0, r=0, t=20, b=bottom_margin, pad=30))
 
     # Update font
-    fig.update_layout(font=dict(family='Gill Sans MT, Arial', 
+    fig.update_layout(font=dict(family='Calibri, Arial', 
                                 size=14, color=text_grey))
 
     return fig
@@ -370,7 +371,7 @@ def plot_projections(df, name):
     end_dates =pd.DatetimeIndex(dates_index + pd.DateOffset(months=1))
     meh_df = pd.DataFrame(
         {'period beginning': dates_index, 
-        'MEH': 8 * np.busday_count(dates_index.values.astype('datetime64[D]'), 
+        'MEH': 8 * np.busday_count(pd.DatetimeIndex(dates_index).values.astype('datetime64[D]'), 
                                 end_dates.values.astype('datetime64[D]'))})
     fig.add_trace(go.Scatter(
         y=meh_df['MEH'],
@@ -402,6 +403,10 @@ def plot_projections(df, name):
                      linecolor=light_grey,
                     #  fixedrange=True
     )
+
+    # Update font
+    fig.update_layout(font=dict(family='Calibri, Arial', 
+                                size=14, color=text_grey))
     
     return fig
     

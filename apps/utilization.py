@@ -1,5 +1,5 @@
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 import dash_daq as daq
 from dash.dependencies import Input, Output, State
@@ -102,7 +102,7 @@ utilization_display = dbc.Row(
 
 ### VALID THRU ###
 valid_thru = dbc.Container(html.Div(id='valid-thru'),
-                           style={'fontFamily': 'Gill Sans MT, Arial',
+                           style={'fontFamily': 'Calibri, Arial',
                                   'fontSize': 16,
                                   'textAlign': 'left'})
 

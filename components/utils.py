@@ -120,7 +120,7 @@ def predict_utilization(idf, predict_input):
         pdf['Predicted Total'] = pd.Series([])
     
     # append to idf
-    idf = idf.append(pdf, ignore_index=True)
+    idf = pd.concat([pdf, idf], ignore_index=True)
     idf.fillna(0, inplace=True)
     
     # add strategic year helper column
@@ -145,8 +145,8 @@ def predict_utilization(idf, predict_input):
     # update predicted for this month
     filt = idf['DT'] == max_DT
     this_month_meh = idf.loc[filt, 'MEH'].values[0]
-    idf.at[filt, 'Predicted Billable'] = predicted_utilization * this_month_meh
-    idf.at[filt, 'Predicted Total'] = predicted_fte * this_month_meh
+    idf.loc[filt, 'Predicted Billable'] = predicted_utilization * this_month_meh
+    idf.loc[filt, 'Predicted Total'] = predicted_fte * this_month_meh
     
     # calculate averages
     for sy in idf['Strategy Year'].unique():

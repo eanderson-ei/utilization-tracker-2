@@ -1,5 +1,6 @@
-import dash_html_components as html
+from dash import html
 import dash_bootstrap_components as dbc
+from dash.dependencies import Input, Output, State
 import json
 import pandas as pd
 import os
@@ -56,12 +57,13 @@ LOGO = app.get_asset_url('ei-logo-white.png')
 ### ----------------------------- LAYOUT ----------------------------------###
 
 ### NAVBAR ###
-nav_items = dbc.Container([
+nav_items = dbc.Nav([
     dbc.NavItem(dbc.NavLink('My Utilization', href='/')),
     dbc.NavItem(dbc.NavLink('My Projects', href='/my_projects')),
     dbc.NavItem(dbc.NavLink('My Team', href='/my_team')),
     dbc.NavItem(dbc.NavLink('Projections', href='/my_forecast')),
-]
+    ],
+    className='ms-auto'
 )
 
 navbar = dbc.Navbar(
@@ -72,27 +74,34 @@ navbar = dbc.Navbar(
                 dbc.Row(
                     [
                         dbc.Col(html.Img(src=LOGO, height="30px")),
-                        dbc.Col(dbc.NavbarBrand("Utilization Report", className="ml-2")),
+                        dbc.Col(dbc.NavbarBrand("Utilization Report", className="ms-2")),
                     ],
                     align="center",
-                    no_gutters=True,
                 ),
                 # href="/",
             ),
-            dbc.NavbarToggler(id="navbar-toggler"),
+            dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
             dbc.Collapse(
-                dbc.Nav(
-                    [nav_items], className="ml-auto", navbar=True
+                    children=[nav_items],
+                    id="navbar-collapse",
+                    is_open=False,
+                    navbar=True,
                 ),
-                id="navbar-collapse",
-                navbar=True
-            ),
-        ]
+        ],
     ),
     color="primary",
     dark=True,
-    className="mb-5"
 )
 
 
 ### ---------------------------- CALLBACKS ------------------------------- ###
+# add callback for toggling the collapse on small screens
+@app.callback(
+    Output("navbar-collapse", "is_open"),
+    [Input("navbar-toggler", "n_clicks")],
+    [State("navbar-collapse", "is_open")],
+)
+def toggle_navbar_collapse(n, is_open):
+    if n:
+        return not is_open
+    return is_open

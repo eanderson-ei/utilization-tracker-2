@@ -3,20 +3,16 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - colorlover
+  - python==3.11
   - dash
   - dash-auth
   - dash-bootstrap-components
-  - dash-core-components
   - dash-daq
-  - dash-html-components
-  - dash-table
-  - Flask
-  - gunicorn
-  - numpy 
-  - pandas 
-  - plotly 
-  - pygsheets
+  - flask
+  - pandas
   - webcolors
-  - xlrd
+  - ipykernel
+  - pip:
+    - gunicorn
+    - pygsheets
 prefix: C:\Users\Erik\miniconda3\envs\utilization-tracker-3

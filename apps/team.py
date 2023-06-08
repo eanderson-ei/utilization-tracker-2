@@ -1,9 +1,9 @@
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
-import dash_table
+from dash import dash_table
 from datetime import datetime as dt
 import re  # used to regex date picker range output
 
@@ -87,7 +87,7 @@ entry_table = dbc.Container(
 
 ### VALID THRU ###
 valid_thru = dbc.Container(html.Div(id='valid-thru-team'),
-                           style={'fontFamily': 'Gill Sans MT, Arial',
+                           style={'fontFamily': 'Calibri, Arial',
                                   'fontSize': 16,
                                   'textAlign': 'left'})
 
@@ -206,7 +206,7 @@ def update_entry_table(project, start_date, end_date, clickData):
                 'height': 'auto',
                 'minWidth': '30px', 'width': '30px', 'maxWidth': '30px',
                 'textAlign': 'center',
-                'font-family': 'Gill Sans MT, Arial',
+                'font-family': 'Calibri, Arial',
                 'font-size': 14,
                 'font-color': 'darkgrey'
             },
