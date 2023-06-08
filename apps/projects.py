@@ -86,7 +86,7 @@ entry_table = dbc.Container(
 
 ### VALID THRU ###
 valid_thru = dbc.Container(html.Div(id='valid-thru'),
-                           style={'fontFamily': 'Gill Sans MT, Arial',
+                           style={'fontFamily': 'Calibri, Arial',
                                   'fontSize': 16,
                                   'textAlign': 'left'})
 
@@ -194,7 +194,7 @@ def update_entry_table(name, start_date, end_date, clickData):
                 'height': 'auto',
                 'minWidth': '30px', 'width': '30px', 'maxWidth': '30px',
                 'textAlign': 'center',
-                'font-family': 'Gill Sans MT, Arial',
+                'font-family': 'Calibri, Arial',
                 'font-size': 14,
                 'font-color': 'darkgrey'
             },
