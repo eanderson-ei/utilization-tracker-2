@@ -2,8 +2,8 @@ import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 # see https://community.plot.ly/t/nolayoutexception-on-deployment-of-multi-page-dash-app-example-code/12463/2?u=dcomfort
-from app import server, app
-from apps import utilization, projects, team
+from app import app  # , server
+from apps import utilization, projects, team, forecasts
 from apps.common import navbar
 
 # from layouts import layout_main, projects_layout, allocation_layout
@@ -59,8 +59,8 @@ def display_page(pathname):
          return projects.layout
     elif pathname == '/my_team':
         return team.layout
-    # elif pathname == '/allocation':
-    #      return allocation_layout
+    elif pathname == '/my_forecast':
+         return forecasts.layout
     else:
         return '404'
 

@@ -4,7 +4,7 @@ import dash_auth
 import json
 import os
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
+# from flask_sqlalchemy import SQLAlchemy
 
 print("starting app.py")
 
@@ -33,7 +33,6 @@ app.server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # db = SQLAlchemy(app.server)
 
 
-# Keep this out of source code repository - save in a file or a database
 # Local dev
 try:
     with open('secrets/passwords.json') as f:
