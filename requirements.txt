@@ -15,4 +15,5 @@ plotly
 psycopg2
 pygsheets
 webcolors
+Werkzeug<2.1.0
 xlrd
