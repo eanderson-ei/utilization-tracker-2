@@ -34,13 +34,13 @@ except:
 
 print("loading hours entries")
 # load hours entries
-hours_entries = load_report(client, 'hours-entries', '2022-hours')
-# hours_entries = pd.concat([
-#     load_report(client, 'hours-entries', '2023-hours'),
-#     load_report(client, 'hours-entries', '2022-hours'),
+# hours_entries = load_report(client, 'hours-entries', '2023-hours')
+hours_entries = pd.concat([
+    load_report(client, 'hours-entries', '2023-hours'),
+    load_report(client, 'hours-entries', '2022-hours'),
 #     # load_report(client, 'hours-entries', '2021-hours')
 #     # load_report(client, 'hours-entries', '2019-hours')
-# ])
+])
 hours_entries['Hours Date'] = pd.to_datetime(hours_entries['Hours Date'])
 
 print("loading forecasts")
