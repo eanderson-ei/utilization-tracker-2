@@ -6,10 +6,11 @@ from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 import numpy as np
 
-sem_months = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-                'Jan', 'Feb', 'Mar']
+sem_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 
+              'Sep', 'Oct', 'Nov', 'Dec']
 # cutoff = 7
-year_helper = [0] * 9 + [1] * 3
+year_helper = [0] * 12  # 9 + [1] * 3
+period_start = pd.to_datetime('2024-01-01')
 
 
 # def get_month_fte(month, year):
@@ -84,7 +85,8 @@ def load_report(client, spreadsheet, sheet_title):
 
 def predict_utilization(idf, predict_input):
     # calculated predicted values
-    filt = idf['DT'] == idf['DT'].max()
+    max_DT = idf['DT'].max()
+    filt = idf['DT'] == max_DT
     predicted_utilization = idf.loc[filt, 'Util to Date'].values[0]
     predicted_fte = idf.loc[filt, 'FTE to Date'].values[0]
     
@@ -93,7 +95,6 @@ def predict_utilization(idf, predict_input):
         predicted_utilization = predict_input/100
     
     # create prediction space
-    max_DT = idf['DT'].max()
     max_month_index = sem_months.index(max_DT.strftime('%b')) + 1
     prediction_months = sem_months[max_month_index:] 
     prediction_years = [helper + idf['Entry Year'].max() 
@@ -119,34 +120,30 @@ def predict_utilization(idf, predict_input):
         pdf['Predicted Billable'] = pd.Series([])
         pdf['Predicted Total'] = pd.Series([])
     
-    # append to idf
-    idf = pd.concat([pdf, idf], ignore_index=True)
-    idf.fillna(0, inplace=True)
-    
     # add strategic year helper column
-    def strategy_year(row):
-        if row['DT'].month < pd.to_datetime('Apr', format='%b').month:
+    def strategy_year(row):  #TODO
+        if row['DT'].month < pd.to_datetime('Jan', format='%b').month:
             return str(row['DT'].year - 1) + "-" + str(row['DT'].year)
         else:
             return str(row['DT'].year) + "-" + str(row['DT'].year + 1)
     
-    
-    idf['Strategy Year'] = idf.apply(strategy_year, axis=1)
-    
+    pdf['Strategy Year'] = period_start.year  # idf.apply(strategy_year, axis=1) 
+
+    # append to idf
+    idf = pd.concat([pdf, idf], ignore_index=True)
+    idf.fillna(0, inplace=True)
+
     # populate predicted columns
-    filt = idf['DT'] >= pd.to_datetime(pd.to_datetime('2022' + 'Apr',  #TODO 
-                                                      format='%Y%b'))
-    idf.loc[filt, 'Predicted Billable'] = (idf.loc[filt, 'Predicted Billable'] 
-                                           + idf.loc[filt, 'Billable'])
-    idf.loc[filt, 'Predicted Total'] = (idf.loc[filt, 'Predicted Total'] 
-                                        + idf.loc[filt, 'Total'])
-    
+    idf['Predicted Billable'] = (idf['Predicted Billable'] + idf['Billable'])
+    idf['Predicted Total'] = (idf['Predicted Total'] + idf['Total'])
     
     # update predicted for this month
     filt = idf['DT'] == max_DT
     this_month_meh = idf.loc[filt, 'MEH'].values[0]
     idf.loc[filt, 'Predicted Billable'] = predicted_utilization * this_month_meh
     idf.loc[filt, 'Predicted Total'] = predicted_fte * this_month_meh
+
+    
     
     # calculate averages
     for sy in idf['Strategy Year'].unique():

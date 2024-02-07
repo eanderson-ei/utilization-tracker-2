@@ -1,3 +1,4 @@
+import base64
 from dash import dcc
 from dash import html
 import dash_bootstrap_components as dbc
@@ -5,17 +6,24 @@ from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 from dash import dash_table
 from datetime import datetime as dt
+from flask import send_file
+import pandas as pd
+import io
 import re  # used to regex date picker range output
+import urllib
 
 from components import visualizations
 from app import app
-from apps.common import usernames, hours_entries
+from apps.data import usernames, hours_entries
 
 ### ----------------------------- SETUP ---------------------------------- ###
 
 
 
 ### ----------------------------- LAYOUT --------------------------------- ###
+
+### STORE FILTERED DATA ###
+data_store = html.Div(id='hidden-div', style={'display':'none'})
 
 ### INSTRUCTIONS ###
 instruction_text = [
@@ -32,7 +40,7 @@ instruction_text = [
 date_picker = dcc.DatePickerRange(
                 id='date-picker-range',
                 start_date=dt.today().strftime('%Y-%m-01'),
-                min_date_allowed='2019-04-01',
+                min_date_allowed='2022-04-01',  # TODO
                 end_date=dt.today().strftime('%Y-%m-%d'),
                 number_of_months_shown=2,
                 persistence=True,
@@ -77,6 +85,26 @@ projects_graph = dcc.Graph(id='projects-chart',
                                   'displaylogo': False}
                           )
 
+### DOWNLOAD ENTRIES ###
+download_link = dbc.Container(
+    dbc.Row(
+        dbc.Col(
+            html.A(
+                "Download all entries",
+                id='download-link',
+                download="entries.csv",
+                href="",
+                target="_blank"
+            ),
+            width=12,
+            style={'textAlign': 'right',
+                   'fontSize': 16,
+                   'display': 'block',
+                   'margin': '10px'}
+        )
+    )
+)
+
 ### TABLE ###
 entry_table = dbc.Container(
     dbc.Row(
@@ -99,13 +127,15 @@ a name
 
 ### LAYOUT ###
 layout = html.Div([
+    data_store,
     dbc.Container(instruction_text),
     user_input,
     html.Br(),
     dbc.Container(reset_chart),
     dcc.Loading(dbc.Container(projects_graph)),
     html.Br(),
-    entry_table,
+    download_link,
+    entry_table,    
     html.Br(),
     valid_thru,
     html.Br(),
@@ -149,6 +179,7 @@ def update_project_chart(name, start_date, end_date, clickData):
 ### UPDATE TABLE ###
 @app.callback(
     Output('entry-table', 'children'),
+    Output('download-link', 'href'),
     [Input('select-name', 'value'),
      Input('date-picker-range', 'start_date'),
      Input('date-picker-range', 'end_date'),
@@ -224,7 +255,11 @@ def update_entry_table(name, start_date, end_date, clickData):
             style_as_list_view=True,
         )
         
-        return table
+        # Convert DataFrame to JSON
+        csv_string = df.to_csv(index=False, encoding='utf-8')
+        csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
+        # df_json = df.to_json(date_format='iso', orient='split')
+        return table, csv_string
 
 # enable reset button
 @app.callback(
@@ -244,3 +279,28 @@ def enable_reset(clickData):
 def clear_clickData(n_clicks, name):
     if n_clicks or name:
         return None
+    
+# # download entries
+# @app.callback(
+#     Output('download-link', 'href'),
+#     [Input('download-link', 'n_clicks')],
+#     [State('hidden-div', 'children')]
+# )
+# def generate_csv(n_clicks, json_data):
+#     if n_clicks is None or n_clicks <= 0:
+#         raise PreventUpdate
+
+#     # Convert JSON data back to DataFrame
+#     df = pd.read_json(json_data, orient='split')
+
+#     print(df)
+
+#     # Convert DataFrame to CSV string
+#     csv_string = df.to_csv(index=False, encoding='utf-8')
+
+#     # Encode CSV string to base64
+#     base64_csv = base64.b64encode(csv_string.encode()).decode()
+
+#     # Create a download link
+#     download_link = f"data:text/csv;base64,{base64_csv}"
+#     return download_link

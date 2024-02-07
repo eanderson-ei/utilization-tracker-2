@@ -10,7 +10,7 @@ import json
 import pandas as pd
 
 from components import visualizations
-from apps.common import usernames, hours_report, hours_entries
+from apps.data import usernames, hours_report, hours_entries
 
 from app import app
 

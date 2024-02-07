@@ -13,8 +13,8 @@ external_stylesheets = [dbc.themes.LITERA]  # Also try LITERA, SPACELAB
 server = Flask(__name__)
 app = dash.Dash(__name__, server=server,
                 external_stylesheets=external_stylesheets, 
-                show_undo_redo=True)
-app.config.suppress_callback_exceptions = True
+                show_undo_redo=False)
+app.config.suppress_callback_exceptions = True  # SWITCH FOR DEV
 app.server.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # DO NOT PUT CARRIAGE RETURNS IN CONNECTION STRING !!!

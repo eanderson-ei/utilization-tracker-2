@@ -4,7 +4,7 @@ from dash.dependencies import Input, Output
 # see https://community.plot.ly/t/nolayoutexception-on-deployment-of-multi-page-dash-app-example-code/12463/2?u=dcomfort
 from app import app, server
 from apps import utilization, projects, team, forecasts
-from apps.common import navbar
+from apps.navbar import navbar
 
 # from layouts import layout_main, projects_layout, allocation_layout
 # import callbacks
@@ -67,4 +67,4 @@ def display_page(pathname):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=False)
+    app.run_server(debug=False)  # SWITCH FOR DEV

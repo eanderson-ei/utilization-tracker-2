@@ -4,7 +4,7 @@ import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from apps.common import forecasts
+from apps.data import forecasts
 from components import visualizations
 from app import app
 

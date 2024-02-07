@@ -1,78 +1,18 @@
-name: utilization-tracker-2
+name: utilization-tracker-3
 channels:
   - conda-forge
   - defaults
 dependencies:
-  - brotlipy=0.7.0=py38h1e8a9f7_1000
-  - ca-certificates=2020.6.20=hecda079_0
-  - certifi=2020.6.20=py38h32f6830_0
-  - cffi=1.14.0=py38ha419a9e_0
-  - click=7.1.2=pyh9f0ad1d_0
-  - flask=1.1.2=pyh9f0ad1d_0
-  - flask-compress=1.5.0=pyh9f0ad1d_0
-  - future=0.18.2=py38h32f6830_1
-  - itsdangerous=1.1.0=py_0
-  - jinja2=2.11.2=pyh9f0ad1d_0
-  - markupsafe=1.1.1=py38h9de7a3e_1
-  - openssl=1.1.1g=he774522_0
-  - pip=20.1.1=py_1
-  - plotly=4.9.0=pyh9f0ad1d_0
-  - pycparser=2.20=pyh9f0ad1d_2
-  - python=3.8.4=cpython_h5fd99cc_0
-  - python_abi=3.8=1_cp38
-  - pyyaml=5.3.1=py38h9de7a3e_0
-  - retrying=1.3.3=py_2
-  - setuptools=49.2.0=py38h32f6830_0
-  - six=1.15.0=pyh9f0ad1d_0
-  - sqlite=3.32.3=he774522_1
-  - vc=14.1=h869be7e_1
-  - vs2015_runtime=14.16.27012=h30e32a0_2
-  - werkzeug=1.0.1=pyh9f0ad1d_0
-  - wheel=0.34.2=py_1
-  - wincertstore=0.2=py38_1003
-  - yaml=0.2.5=he774522_0
+  - python==3.11
+  - dash
+  - dash-auth
+  - dash-bootstrap-components
+  - dash-daq
+  - flask
+  - pandas
+  - webcolors
+  - ipykernel
   - pip:
-    - brotli==1.0.7
-    - cachetools==4.1.1
-    - chardet==3.0.4
-    - colorlover==0.3.0
-    - dash==1.16.0
-    - dash-auth==1.3.2
-    - dash-bootstrap-components==0.10.3
-    - dash-core-components==1.12.0
-    - dash-daq==0.5.0
-    - dash-html-components==1.1.1
-    - dash-renderer==1.8.0
-    - dash-table==4.10.1
-    - flask-seasurf==0.2.2
-    - flask-sqlalchemy==2.4.4
-    - google-api-core==1.22.0
-    - google-api-python-client==1.10.0
-    - google-auth==1.19.2
-    - google-auth-httplib2==0.0.4
-    - google-auth-oauthlib==0.4.1
-    - googleapis-common-protos==1.52.0
-    - gunicorn==20.0.4
-    - httplib2==0.18.1
-    - idna==2.10
-    - numpy==1.19.1
-    - oauth2client==4.1.3
-    - oauthlib==3.1.0
-    - pandas==1.0.5
-    - protobuf==3.12.2
-    - psycopg2==2.8.5
-    - pyasn1==0.4.8
-    - pyasn1-modules==0.2.8
-    - pygsheets==2.0.3.1
-    - pytz==2020.1
-    - requests==2.24.0
-    - requests-oauthlib==1.3.0
-    - rsa==4.6
-    - sqlalchemy==1.3.18
-    - ua-parser==0.10.0
-    - uritemplate==3.0.1
-    - urllib3==1.25.9
-    - webcolors==1.11.1
-    - xlrd==1.2.0
-prefix: C:\Users\Erik\Anaconda3\envs\utilization-tracker-2
-
+    - gunicorn
+    - pygsheets
+prefix: C:\Users\Erik\miniconda3\envs\utilization-tracker-3

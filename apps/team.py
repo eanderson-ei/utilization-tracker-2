@@ -6,10 +6,11 @@ from dash.exceptions import PreventUpdate
 from dash import dash_table
 from datetime import datetime as dt
 import re  # used to regex date picker range output
+import urllib
 
 from components import visualizations
 from app import app
-from apps.common import usernames, hours_entries
+from apps.data import usernames, hours_entries
 
 ### ----------------------------- SETUP ---------------------------------- ###
 task_entries = hours_entries.copy()
@@ -33,7 +34,7 @@ instruction_text = [
 date_picker = dcc.DatePickerRange(
                 id='date-picker-range',
                 start_date=dt.today().strftime('%Y-%m-01'),
-                min_date_allowed='2019-04-01',
+                min_date_allowed='2022-04-01',  # TODO
                 end_date=dt.today().strftime('%Y-%m-%d'),
                 number_of_months_shown=2,
                 persistence=True,
@@ -78,6 +79,26 @@ team_graph = dcc.Graph(id='team-chart',
                                   'displaylogo': False}
                           )
 
+### DOWNLOAD ENTRIES ###
+download_link = dbc.Container(
+    dbc.Row(
+        dbc.Col(
+            html.A(
+                "Download all entries",
+                id='download-link-team',
+                download="entries.csv",
+                href="",
+                target="_blank"
+            ),
+            width=12,
+            style={'textAlign': 'right',
+                   'fontSize': 16,
+                   'display': 'block',
+                   'margin': '10px'}
+        )
+    )
+)
+
 ### TABLE ###
 entry_table = dbc.Container(
     dbc.Row(
@@ -106,6 +127,7 @@ layout = html.Div([
     dbc.Container(reset_chart),
     dcc.Loading(dbc.Container(team_graph)),
     html.Br(),
+    download_link,
     entry_table,
     html.Br(),
     valid_thru,
@@ -165,6 +187,7 @@ def update_project_chart(name, start_date, end_date, clickData):
 ### UPDATE TABLE ###
 @app.callback(
     Output('entry-table-team', 'children'),
+    Output('download-link-team', 'href'),
     [Input('select-project', 'value'),
      Input('date-picker-range', 'start_date'),
      Input('date-picker-range', 'end_date'),
@@ -236,7 +259,11 @@ def update_entry_table(project, start_date, end_date, clickData):
             style_as_list_view=True,
         )
         
-        return table
+        # Convert DataFrame to JSON
+        csv_string = df.to_csv(index=False, encoding='utf-8')
+        csv_string = "data:text/csv;charset=utf-8,%EF%BB%BF" + urllib.parse.quote(csv_string)
+        # df_json = df.to_json(date_format='iso', orient='split')
+        return table, csv_string
 
 # enable reset button
 @app.callback(
