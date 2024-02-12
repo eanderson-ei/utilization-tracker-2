@@ -132,6 +132,7 @@ def predict_utilization(idf, predict_input):
     # append to idf
     idf = pd.concat([pdf, idf], ignore_index=True)
     idf.fillna(0, inplace=True)
+    idf.sort_values('DT', inplace=True)
 
     # populate predicted columns
     idf['Predicted Billable'] = (idf['Predicted Billable'] + idf['Billable'])
@@ -142,18 +143,14 @@ def predict_utilization(idf, predict_input):
     this_month_meh = idf.loc[filt, 'MEH'].values[0]
     idf.loc[filt, 'Predicted Billable'] = predicted_utilization * this_month_meh
     idf.loc[filt, 'Predicted Total'] = predicted_fte * this_month_meh
-
-    
     
     # calculate averages
-    for sy in idf['Strategy Year'].unique():
+    for sy in idf['Strategy Year'].unique():        
         filt = idf['Strategy Year'] == sy
         idf.loc[filt, 'Avg Utilization'] = (idf.loc[filt, 'Predicted Billable'].cumsum()
                                     / idf.loc[filt, 'MEH'].cumsum())
         idf.loc[filt, 'Avg FTE'] = (idf.loc[filt, 'Predicted Total'].cumsum()
                                     / idf.loc[filt, 'MEH'].cumsum())
-    
-    idf.sort_values('DT', inplace=True)
     
     return idf, max_DT
 
