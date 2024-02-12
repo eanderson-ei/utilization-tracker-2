@@ -120,7 +120,7 @@ layout = html.Div([
     drop_downs,
     html.Br(),
     dbc.Container(reset_chart),
-    dbc.Container(utilization_display),
+    dcc.Loading(dbc.Container(utilization_display)),
     html.Br(),
     valid_thru,
     html.Br(),
