@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import date, timedelta
 from dateutil.relativedelta import relativedelta
 import numpy as np
+import plotly.graph_objects as go
 
 sem_months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 
               'Sep', 'Oct', 'Nov', 'Dec']
@@ -157,18 +158,15 @@ def predict_utilization(idf, predict_input):
 
 ### Utilities for Projects ###
 
-def get_project_totals(idf, start_date, end_date):
-    filt = (idf['Hours Date'] >= start_date) & (idf['Hours Date'] <= end_date) 
-    entries_by_date = idf.loc[filt, :]
-    project_totals = entries_by_date.groupby('Project')['Entered Hours'].sum()
+def get_project_totals(idf):
+    project_totals = idf.groupby('Project')['Entered Hours'].sum()
     project_totals.sort_values(inplace=True)
     
     return project_totals
 
 
-def get_task_totals(idf, start_date, end_date, project):
-    filt = ((idf['Hours Date'] >= start_date) & (idf['Hours Date'] <= end_date)
-            & (idf['Project'] == project))
+def get_task_totals(idf, project):
+    filt = idf['Project'] == project
     entries_by_date = idf.loc[filt, :]
     task_totals = entries_by_date.groupby('Task Name')['Entered Hours'].sum()
     task_totals.sort_values(inplace=True)
@@ -176,34 +174,49 @@ def get_task_totals(idf, start_date, end_date, project):
     return task_totals
 
 
-def get_meh_from_entries(idf, start_date, end_date):
-    filt = (idf['Hours Date'] >= start_date) & (idf['Hours Date'] <= end_date) 
-    idf = idf.loc[filt, :]
+def get_meh_from_entries(idf):
     max_date = idf['Hours Date'].max().date()
     min_date = idf['Hours Date'].min().date()
+    print(f'Min: {min_date}, Nax:{max_date}')
     days = np.busday_count(min_date, max_date + timedelta(days=1))
     hours = days * 8
     return hours
 
 ### Utilities for Teams ###
 
-def get_user_totals(pdf, start_date, end_date):
-    filt = (pdf['Hours Date'] >= start_date) & (pdf['Hours Date'] <= end_date)
-    entries_by_date = pdf.loc[filt, :]
-    user_totals = entries_by_date.groupby('User Name')['Entered Hours'].sum()
+def get_user_totals(pdf):
+    user_totals = pdf.groupby('User Name')['Entered Hours'].sum()
     user_totals.sort_values(inplace=True)
     
     return user_totals
 
 
-def get_user_task_totals(pdf, start_date, end_date, user):
-    filt = ((pdf['Hours Date'] >= start_date) & (pdf['Hours Date'] <= end_date)
-            & (pdf['User Name'] == user))
+def get_user_task_totals(pdf, user):
+    filt = pdf['User Name'] == user
     entries_by_date = pdf.loc[filt, :]
     user_totals = entries_by_date.groupby('Task Name')['Entered Hours'].sum()
     user_totals.sort_values(inplace=True)
     
     return user_totals
+
+def no_matching_data():
+    fig = go.Figure()
+    fig.update_layout(
+    xaxis=dict(visible=False),
+    yaxis=dict(visible=False),
+    annotations=[
+        dict(
+            text="No matching data found",
+            xref="paper",
+            yref="paper",
+            showarrow=False,
+            font=dict(size=28),
+            )
+        ],
+    plot_bgcolor='white',
+    paper_bgcolor='white'
+    )
+    return fig
 
 
 ### -------------- ALLOCATION TABLE -------------------------------------- ###

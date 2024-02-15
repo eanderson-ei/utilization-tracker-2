@@ -202,12 +202,16 @@ def plot_utilization(df, name, predict_input):
 def plot_projects(df, name, start_date, end_date, mode, project=None):
     # subset df and entries by user
     idf = df[df['User Name'] == name].copy()
-    meh = utils.get_meh_from_entries(idf, start_date, end_date)
+    filt = (idf['Hours Date'] >= start_date) & (idf['Hours Date'] <= end_date) 
+    entries_by_date = idf.loc[filt, :]
+    if entries_by_date.empty:
+        return utils.no_matching_data()
+    meh = utils.get_meh_from_entries(entries_by_date)
     bar_width = .7
     fig = go.Figure()
 
     if mode == 'Projects':
-        project_totals = utils.get_project_totals(idf, start_date, end_date)
+        project_totals = utils.get_project_totals(entries_by_date)
 
         fig.add_traces(go.Bar(
             x=project_totals,
@@ -221,7 +225,7 @@ def plot_projects(df, name, start_date, end_date, mode, project=None):
         bars = project_totals
 
     elif mode == 'Tasks':
-        task_totals = utils.get_task_totals(idf, start_date, end_date, project)
+        task_totals = utils.get_task_totals(entries_by_date, project)
         task_totals
 
         fig.add_traces(go.Bar(
@@ -280,11 +284,15 @@ def plot_projects(df, name, start_date, end_date, mode, project=None):
 def plot_team(df, project, start_date, end_date, mode, user=None):
     # subset df and entries by user
     pdf = df[df['Project'] == project].copy()
+    filt = (pdf['Hours Date'] >= start_date) & (pdf['Hours Date'] <= end_date)
+    entries_by_date = pdf.loc[filt, :]
+    if entries_by_date.empty:
+        return utils.no_matching_data()
     bar_width = .7
     fig = go.Figure()
 
     if mode == 'Users':
-        user_totals = utils.get_user_totals(pdf, start_date, end_date)
+        user_totals = utils.get_user_totals(entries_by_date)
 
         fig.add_traces(go.Bar(
             x=user_totals,
@@ -298,7 +306,7 @@ def plot_team(df, project, start_date, end_date, mode, user=None):
         bars = user_totals
 
     elif mode == 'Tasks':
-        user_task_totals = utils.get_user_task_totals(pdf, start_date, end_date, user)
+        user_task_totals = utils.get_user_task_totals(entries_by_date, user)
 
         fig.add_traces(go.Bar(
             x=user_task_totals,
